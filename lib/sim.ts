@@ -59,16 +59,20 @@ export function seededRand(id: string, salt = "noe"): () => number {
 // ---------- queue ----------
 export type SimItem =
   | { kind: "resident"; dueMs: number; residentId: string; doveCallId: number; outcome: "safe" | "unstable" | "needs_help" | "missed" }
-  | { kind: "rescuer"; dueMs: number; rescuerId: string };
+  | { kind: "rescuer"; dueMs: number; rescuerId: string }
+  // a persona that cannot climb stairs, re-checked until the water reaches its door
+  | { kind: "escalate"; dueMs: number; residentId: string; name: string; lat: number; lon: number };
 
 export interface SimCtx {
   simIso: () => string;
   log: (agent: AgentName, message: string, data?: unknown) => Promise<void>;
   notifyNeed: (kind: "needs_help" | "rescuer_available") => void;
   stale: () => boolean; // true if a reset happened since the item was scheduled
+  wetAt: (lat: number, lon: number) => boolean; // water at this point on the flood layer ARK shows (approximate model)
 }
 
 const MIN = 60_000;
+const ESCALATE_STEP_MS = 5 * MIN;
 
 export function scheduleResidentOutcome(queue: SimItem[], residentId: string, doveCallId: number, callSimMs: number): void {
   if (residentId === REAL_PHONE_RESIDENT) return;
@@ -97,7 +101,8 @@ export async function processSim(queue: SimItem[], nowSimMs: number, ctx: SimCtx
   for (const item of due) {
     if (ctx.stale()) return;
     try {
-      if (item.kind === "resident") await runResident(item, ctx);
+      if (item.kind === "resident") await runResident(item, queue, nowSimMs, ctx);
+      else if (item.kind === "escalate") await runEscalate(item, queue, nowSimMs, ctx);
       else await runRescuer(item, ctx);
     } catch (err: any) {
       console.error("[sim] item failed", item, err?.message);
@@ -105,7 +110,7 @@ export async function processSim(queue: SimItem[], nowSimMs: number, ctx: SimCtx
   }
 }
 
-async function runResident(item: Extract<SimItem, { kind: "resident" }>, ctx: SimCtx) {
+async function runResident(item: Extract<SimItem, { kind: "resident" }>, queue: SimItem[], nowSimMs: number, ctx: SimCtx) {
   const res = await one<Resident>("select * from residents where id = $1", [item.residentId]);
   if (!res) return;
   if (item.outcome === "missed") {
@@ -113,20 +118,41 @@ async function runResident(item: Extract<SimItem, { kind: "resident" }>, ctx: Si
     await ctx.log("voice", `${res.name}: no answer`, { event: "missed", residentId: res.id, doveCallId: item.doveCallId, simulated: true });
     return;
   }
-  const needs = item.outcome === "needs_help";
+  // DOVE calls up to 90 min before the water: a persona that cannot climb stairs is only urgent once the water
+  // is at its door. Until then it reports "OK for now" and escalates when the flood layer reaches it.
+  const stuck = item.outcome === "needs_help";
+  const needs = stuck && ctx.wetAt(res.lat, res.lon);
+  const status = stuck && !needs ? "unstable" : item.outcome;
   await query("update dove_calls set state = 'ended' where id = $1 and state in ('ringing','accepted')", [item.doveCallId]);
   await query(
     "insert into status_reports (resident_id, status, can_climb_stairs, notes, channel) values ($1, $2, $3, 'simulated persona', 'voice')",
-    [res.id, item.outcome, needs ? false : res.mobility === "ok" ? true : null],
+    [res.id, status, stuck ? false : res.mobility === "ok" ? true : null],
   );
   await ctx.log(
     "voice",
     needs
       ? `${res.name}: urgent · cannot climb stairs`
+      : stuck ? `${res.name}: OK for now · cannot climb stairs`
       : item.outcome === "unstable" ? `${res.name}: OK for now · unstable` : `${res.name}: safe`,
-    { event: "status", residentId: res.id, status: item.outcome, channel: "voice", simulated: true },
+    { event: "status", residentId: res.id, status, channel: "voice", simulated: true },
   );
   if (needs) ctx.notifyNeed("needs_help");
+  else if (stuck) queue.push({ kind: "escalate", dueMs: nowSimMs + ESCALATE_STEP_MS, residentId: res.id, name: res.name, lat: res.lat, lon: res.lon });
+}
+
+async function runEscalate(item: Extract<SimItem, { kind: "escalate" }>, queue: SimItem[], nowSimMs: number, ctx: SimCtx) {
+  if (!ctx.wetAt(item.lat, item.lon)) {
+    queue.push({ ...item, dueMs: nowSimMs + ESCALATE_STEP_MS });
+    return;
+  }
+  await query(
+    "insert into status_reports (resident_id, status, can_climb_stairs, notes, channel) values ($1, 'needs_help', false, 'simulated persona', 'voice')",
+    [item.residentId],
+  );
+  await ctx.log("voice", `${item.name}: water at the door · urgent · cannot climb stairs`, {
+    event: "status", residentId: item.residentId, status: "needs_help", channel: "voice", simulated: true, escalated: true,
+  });
+  ctx.notifyNeed("needs_help");
 }
 
 async function runRescuer(item: Extract<SimItem, { kind: "rescuer" }>, ctx: SimCtx) {

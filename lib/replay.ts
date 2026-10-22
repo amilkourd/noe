@@ -8,12 +8,12 @@ import { hasDb, one, query } from "./db";
 import { emitEvent } from "./bus";
 import { loadRoads, loadTerrain, type TerrainGrid } from "./terrain";
 import { runForecast, type Projection } from "./forecaster";
-import { computeExposures, floodAt } from "./exposure";
+import { computeExposures, floodAt, gridCellOf } from "./exposure";
 import { draftAssignments, roadCuts, type Need } from "./dispatcher";
 import { runCopilot, summarizeRain, templateInsights, type CopilotContext, type CopilotInput, type InsightDraft } from "./copilot";
 import {
   PERIMETER_CENTER, PERIMETER_RADIUS_KM, REAL_PHONE_RESIDENT, haversineM, hhmm, processSim,
-  scheduleResidentOutcome, scheduleRescuers, type SimItem,
+  scheduleResidentOutcome, scheduleRescuers, type SimCtx, type SimItem,
 } from "./sim";
 
 const MIN = 60_000;
@@ -24,6 +24,7 @@ const CALL_WINDOW_MS = 90 * MIN;
 interface Engine {
   simMs: number; speed: number; running: boolean; timer: ReturnType<typeof setInterval> | null;
   slowedFrom: number | null; // speed before the live DOVE call slowed the replay; restored when a rescuer is sent to her
+  ownsRun: boolean; // this process reset the run tables; false after a restart, when the DB still holds an earlier run
   startMs: number; endMs: number; mode: DataMode; modeChecked: boolean;
   primed: boolean; lastCopiedMs: number; tickBusy: boolean;
   hNow: Record<string, number>;
@@ -48,7 +49,7 @@ function eng(): Engine {
     const startMs = envMs("REPLAY_START", "2026-10-20T01:00:00Z"); // 03:00 Paris: alert 03:15, Garcia call 03:30
     const endMs = envMs("REPLAY_END", "2026-10-20T12:00:00Z");
     g.__noeEngine = {
-      simMs: startMs, speed: clampSpeed(Number(process.env.REPLAY_SPEED) || 60), running: false, timer: null, slowedFrom: null,
+      simMs: startMs, speed: clampSpeed(Number(process.env.REPLAY_SPEED) || 60), running: false, timer: null, slowedFrom: null, ownsRun: false,
       startMs, endMs, mode: "REPLAY", modeChecked: false,
       primed: false, lastCopiedMs: startMs, tickBusy: false,
       hNow: {}, flood: null, projection: [], lastForecasts: [], bestForecastId: null,
@@ -153,6 +154,10 @@ export async function control(action: "start" | "pause" | "reset" | "speed", spe
   if (!hasDb()) throw new Error("DATABASE_URL is not set");
   if (e.running) return getClock();
   if (e.simMs >= e.endMs) return getClock(); // finished: reset first
+  // The clock restarts with the process but the DB does not: an earlier run's reports would paint residents red
+  // before DOVE calls them, its DOVE calls would stop DOVE from calling those residents again, and its perimeter
+  // row would stop the alert from firing, so no rescuer would come on duty. Start from a clean run.
+  if (!e.ownsRun) await reset(e);
   await detectMode(e);
   if (!e.primed) {
     await query(
@@ -273,12 +278,18 @@ async function copyReference(fromMs: number, toMs: number, prime: boolean) {
   }
 }
 
-function simCtx(e: Engine, epoch: number) {
+function simCtx(e: Engine, epoch: number): SimCtx {
   return {
     simIso: () => iso(e.simMs),
     log: logAgent,
     notifyNeed,
     stale: () => epoch !== e.epoch,
+    wetAt: (lat, lon) => {
+      const grid = safeTerrain();
+      if (!grid || !e.flood) return false;
+      const cell = gridCellOf(grid, lat, lon);
+      return cell >= 0 && e.flood.cells.includes(cell); // flood cells are the wet ones (> 5 cm)
+    },
   };
 }
 
@@ -293,6 +304,7 @@ async function reset(e: Engine) {
       "truncate observations, flows, rain, forecasts, exposures, missions, status_reports, insights, agent_log, dove_calls restart identity cascade",
     );
     await query("update rescuers set available = false, lat = home_lat, lon = home_lon, updated_at = now()");
+    e.ownsRun = true;
   }
   e.simMs = e.startMs;
   e.primed = false;
