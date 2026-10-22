@@ -1,0 +1,1602 @@
+[
+ {
+  "id": "osm-node-1239947641",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.900147,
+  "lon": 4.084913,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-1558249566",
+  "kind": "school",
+  "name": "École primaire Le tilleul",
+  "capacity": null,
+  "lat": 43.770132,
+  "lon": 3.956241,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-1690372120",
+  "kind": "school",
+  "name": "École primaire",
+  "capacity": null,
+  "lat": 43.82753,
+  "lon": 4.203905,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-2286109182",
+  "kind": "school",
+  "name": "École Maternelle et Élémentaire",
+  "capacity": null,
+  "lat": 43.827715,
+  "lon": 4.203199,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-3203831672",
+  "kind": "school",
+  "name": "École maternelle Jacques Brel",
+  "capacity": null,
+  "lat": 43.687177,
+  "lon": 4.124365,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-3203831673",
+  "kind": "school",
+  "name": "École élémentaire Jacques Brel",
+  "capacity": null,
+  "lat": 43.687424,
+  "lon": 4.12446,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-3255380562",
+  "kind": "school",
+  "name": "Lycée professionnel Louis Feuillade",
+  "capacity": null,
+  "lat": 43.671314,
+  "lon": 4.123383,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-3305946111",
+  "kind": "school",
+  "name": "Ancienne École maternelle",
+  "capacity": null,
+  "lat": 43.854461,
+  "lon": 4.112056,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-3596656245",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.778397,
+  "lon": 4.157765,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-3596716961",
+  "kind": "school",
+  "name": "École maternelle",
+  "capacity": null,
+  "lat": 43.778401,
+  "lon": 4.157581,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-3631820386",
+  "kind": "school",
+  "name": "École primaire privée la Sarrazine",
+  "capacity": null,
+  "lat": 43.744314,
+  "lon": 4.219999,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-3660566734",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.869355,
+  "lon": 4.082324,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-3848679616",
+  "kind": "school",
+  "name": "Lycée Victor Hugo - voie professionnelle",
+  "capacity": null,
+  "lat": 43.690342,
+  "lon": 4.136795,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-4504740668",
+  "kind": "school",
+  "name": "Collège privé Sainte-Thérèse",
+  "capacity": null,
+  "lat": 43.674211,
+  "lon": 4.133166,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-4504795532",
+  "kind": "school",
+  "name": "Académie Internationale des Métiers du Golf",
+  "capacity": null,
+  "lat": 43.644121,
+  "lon": 4.013321,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-6006529405",
+  "kind": "school",
+  "name": "Crèche intercommunale Les petits Vic-Kings",
+  "capacity": null,
+  "lat": 43.868685,
+  "lon": 4.081212,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-7179696136",
+  "kind": "hospital",
+  "name": "CMPA",
+  "capacity": null,
+  "lat": 43.780854,
+  "lon": 4.091855,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-7207588174",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.900339,
+  "lon": 4.103286,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-7749955801",
+  "kind": "hospital",
+  "name": "Centre hospitalier Pôle santé de Lunel",
+  "capacity": null,
+  "lat": 43.665115,
+  "lon": 4.125275,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-8640834029",
+  "kind": "campsite",
+  "name": "Mas des Termes",
+  "capacity": null,
+  "lat": 43.689237,
+  "lon": 4.178998,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-8761015205",
+  "kind": "care_home",
+  "name": "Ehpad Brunel",
+  "capacity": 49,
+  "lat": 43.674664,
+  "lon": 4.128288,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-9141903296",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.83046,
+  "lon": 4.087993,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-node-13821375301",
+  "kind": "school",
+  "name": "Section d'enseignement général et professionnel adapté du collège de la Petite Camargue",
+  "capacity": null,
+  "lat": 43.655081,
+  "lon": 4.08174,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-28877670",
+  "kind": "school",
+  "name": "Collège Ambrussum",
+  "capacity": null,
+  "lat": 43.687627,
+  "lon": 4.133886,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-28877852",
+  "kind": "school",
+  "name": "Collège Frédéric Mistral",
+  "capacity": null,
+  "lat": 43.672492,
+  "lon": 4.123657,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-28877862",
+  "kind": "school",
+  "name": "Lycée polyvalent Louis Feuillade",
+  "capacity": null,
+  "lat": 43.670705,
+  "lon": 4.122469,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-44529791",
+  "kind": "school",
+  "name": "Collège Le Coutach",
+  "capacity": null,
+  "lat": 43.913449,
+  "lon": 3.994656,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-45725069",
+  "kind": "school",
+  "name": "Lycée polyvalent Victor Hugo",
+  "capacity": null,
+  "lat": 43.690653,
+  "lon": 4.135749,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-46525337",
+  "kind": "school",
+  "name": "École primaire Andrée Cosso",
+  "capacity": null,
+  "lat": 43.65515,
+  "lon": 3.976117,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-49312747",
+  "kind": "school",
+  "name": "Collège Le Vignet",
+  "capacity": null,
+  "lat": 43.783617,
+  "lon": 4.200566,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-49343152",
+  "kind": "school",
+  "name": "Collège de la Petite Camargue",
+  "capacity": null,
+  "lat": 43.654413,
+  "lon": 4.081803,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-49881071",
+  "kind": "school",
+  "name": "École élémentaire Fanfonne Guillierme et École maternelle Ventadour",
+  "capacity": null,
+  "lat": 43.686105,
+  "lon": 4.211519,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-60697318",
+  "kind": "campsite",
+  "name": "Pont de Lunel",
+  "capacity": 81,
+  "lat": 43.686268,
+  "lon": 4.151755,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-60697762",
+  "kind": "campsite",
+  "name": "Mas de l'Isle",
+  "capacity": 180,
+  "lat": 43.670076,
+  "lon": 4.146621,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-62730055",
+  "kind": "school",
+  "name": "École élémentaire Jean Auzilhon",
+  "capacity": null,
+  "lat": 43.90967,
+  "lon": 4.001796,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-63565637",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.83234,
+  "lon": 3.988003,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-66006216",
+  "kind": "campsite",
+  "name": "Bon Port",
+  "capacity": 300,
+  "lat": 43.65534,
+  "lon": 4.141474,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-66846179",
+  "kind": "school",
+  "name": "Collège Roger Contrepas",
+  "capacity": null,
+  "lat": 43.667695,
+  "lon": 4.174305,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-66846180",
+  "kind": "school",
+  "name": "École élémentaire Jules Ferry",
+  "capacity": null,
+  "lat": 43.668101,
+  "lon": 4.174028,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-66846295",
+  "kind": "school",
+  "name": "École maternelle René Bessière",
+  "capacity": null,
+  "lat": 43.667597,
+  "lon": 4.179958,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-79715879",
+  "kind": "school",
+  "name": "École élémentaire Henri de Bornier",
+  "capacity": null,
+  "lat": 43.672972,
+  "lon": 4.135124,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-79715882",
+  "kind": "school",
+  "name": "École primaire privée Sainte-Thérèse",
+  "capacity": null,
+  "lat": 43.674478,
+  "lon": 4.133238,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-83342993",
+  "kind": "care_home",
+  "name": "La Roselière",
+  "capacity": 62,
+  "lat": 43.6639,
+  "lon": 4.173955,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-107438229",
+  "kind": "campsite",
+  "name": "Le Garanel",
+  "capacity": 60,
+  "lat": 43.787419,
+  "lon": 4.086292,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-112025114",
+  "kind": "school",
+  "name": "Groupe Scolaire Roger Leenhardt",
+  "capacity": null,
+  "lat": 43.77902,
+  "lon": 4.191444,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-114591083",
+  "kind": "school",
+  "name": "École Maternelle Le Petit Prince",
+  "capacity": null,
+  "lat": 43.781549,
+  "lon": 4.193622,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-130199008",
+  "kind": "school",
+  "name": "École élémentaire Aqua Viva",
+  "capacity": null,
+  "lat": 43.73932,
+  "lon": 4.17668,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-161764827",
+  "kind": "campsite",
+  "name": "Bellevue en Camargue",
+  "capacity": 181,
+  "lat": 43.68075,
+  "lon": 4.214434,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-184209898",
+  "kind": "care_home",
+  "name": "E.H.P.A.D. La Coustourelle",
+  "capacity": 74,
+  "lat": 43.786044,
+  "lon": 4.091161,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-221126994",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.769631,
+  "lon": 4.003904,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-221319836",
+  "kind": "school",
+  "name": "Groupe Scolaire",
+  "capacity": null,
+  "lat": 43.827531,
+  "lon": 4.203722,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-225045429",
+  "kind": "hospital",
+  "name": "Clinique les Oliviers",
+  "capacity": null,
+  "lat": 43.729337,
+  "lon": 4.171122,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-225617960",
+  "kind": "school",
+  "name": "École primaire Condamine",
+  "capacity": null,
+  "lat": 43.786905,
+  "lon": 4.087957,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-225621532",
+  "kind": "school",
+  "name": "Collège Gaston Doumergue",
+  "capacity": null,
+  "lat": 43.784485,
+  "lon": 4.08327,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-225622784",
+  "kind": "school",
+  "name": "École primaire Li Passeroun",
+  "capacity": null,
+  "lat": 43.785056,
+  "lon": 4.081131,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-225736628",
+  "kind": "school",
+  "name": "École élémentaire Marie Curie",
+  "capacity": null,
+  "lat": 43.677162,
+  "lon": 4.133065,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-251013660",
+  "kind": "school",
+  "name": "École primaire",
+  "capacity": null,
+  "lat": 43.644851,
+  "lon": 4.120174,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-284850136",
+  "kind": "campsite",
+  "name": "Les Amandiers",
+  "capacity": 150,
+  "lat": 43.716316,
+  "lon": 4.166173,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-298863902",
+  "kind": "campsite",
+  "name": "Le Fou du Roi",
+  "capacity": null,
+  "lat": 43.651486,
+  "lon": 4.067493,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-300801102",
+  "kind": "school",
+  "name": "École élémentaire Georges Lis",
+  "capacity": null,
+  "lat": 43.651848,
+  "lon": 4.075714,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-313603598",
+  "kind": "school",
+  "name": "École Maternelle l'Eau Vive",
+  "capacity": null,
+  "lat": 43.739733,
+  "lon": 4.176649,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-314333692",
+  "kind": "school",
+  "name": "École maternelle Camille Claudel",
+  "capacity": null,
+  "lat": 43.688237,
+  "lon": 4.124777,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-314335745",
+  "kind": "school",
+  "name": "École maternelle Gambetta",
+  "capacity": null,
+  "lat": 43.676855,
+  "lon": 4.132207,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-314340467",
+  "kind": "school",
+  "name": "École Maternelle Mario Roustan",
+  "capacity": null,
+  "lat": 43.670732,
+  "lon": 4.125915,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-314343203",
+  "kind": "school",
+  "name": "École maternelle et élémentaire",
+  "capacity": null,
+  "lat": 43.762064,
+  "lon": 4.055795,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320112474",
+  "kind": "school",
+  "name": "École maternelle Fabre d'Eglantine",
+  "capacity": null,
+  "lat": 43.728334,
+  "lon": 4.079954,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320112479",
+  "kind": "school",
+  "name": "École élémentaire Pierre Perret",
+  "capacity": null,
+  "lat": 43.7316,
+  "lon": 4.104142,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320112481",
+  "kind": "school",
+  "name": "École primaire de Vérargues",
+  "capacity": null,
+  "lat": 43.719642,
+  "lon": 4.099121,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320241144",
+  "kind": "school",
+  "name": "École maternelle Arc en Ciel La Roquette",
+  "capacity": null,
+  "lat": 43.671695,
+  "lon": 4.138178,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320252004",
+  "kind": "school",
+  "name": "École élémentaire Gustave Courbet",
+  "capacity": null,
+  "lat": 43.677413,
+  "lon": 4.095566,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320252672",
+  "kind": "school",
+  "name": "École maternelle les Thermes",
+  "capacity": null,
+  "lat": 43.675897,
+  "lon": 4.09306,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320256010",
+  "kind": "school",
+  "name": "École maternelle Louise Michel",
+  "capacity": null,
+  "lat": 43.655813,
+  "lon": 4.115047,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320256011",
+  "kind": "school",
+  "name": "Ecole primaire Simone Veil",
+  "capacity": null,
+  "lat": 43.657771,
+  "lon": 4.115177,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320267940",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.795313,
+  "lon": 4.013966,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320273874",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.78707,
+  "lon": 4.0304,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320277657",
+  "kind": "school",
+  "name": "École élémentaire des Chênes Verts",
+  "capacity": null,
+  "lat": 43.75655,
+  "lon": 4.012605,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320280681",
+  "kind": "school",
+  "name": "École primaire",
+  "capacity": null,
+  "lat": 43.745447,
+  "lon": 4.000803,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320567390",
+  "kind": "school",
+  "name": "École maternelle Les Esquirols",
+  "capacity": null,
+  "lat": 43.729139,
+  "lon": 4.023779,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320567391",
+  "kind": "school",
+  "name": "École primaire La Jasse",
+  "capacity": null,
+  "lat": 43.729481,
+  "lon": 4.024303,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320567392",
+  "kind": "school",
+  "name": "École primaire Gaston Baissette",
+  "capacity": null,
+  "lat": 43.724761,
+  "lon": 4.036303,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320573487",
+  "kind": "school",
+  "name": "École maternelle Jacqueline Majurel",
+  "capacity": null,
+  "lat": 43.717212,
+  "lon": 4.00418,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320573488",
+  "kind": "school",
+  "name": "École élémentaire Alain Barrandon",
+  "capacity": null,
+  "lat": 43.716784,
+  "lon": 4.004401,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320581759",
+  "kind": "school",
+  "name": "École élémentaire de la Plume",
+  "capacity": null,
+  "lat": 43.697677,
+  "lon": 4.034517,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320584679",
+  "kind": "school",
+  "name": "École maternelle les Galinettes",
+  "capacity": null,
+  "lat": 43.668814,
+  "lon": 4.062124,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320584680",
+  "kind": "school",
+  "name": "École élémentaire Marcel Pagnol",
+  "capacity": null,
+  "lat": 43.668923,
+  "lon": 4.062346,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-320588158",
+  "kind": "school",
+  "name": "École maternelle",
+  "capacity": null,
+  "lat": 43.651521,
+  "lon": 4.074881,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-321724404",
+  "kind": "school",
+  "name": "École maternelle Maxime Evdokimoff",
+  "capacity": null,
+  "lat": 43.647549,
+  "lon": 4.038763,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-321724410",
+  "kind": "school",
+  "name": "École élémentaire Jules Ferry",
+  "capacity": null,
+  "lat": 43.647568,
+  "lon": 4.038336,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-321729051",
+  "kind": "school",
+  "name": "Collège le Bérange",
+  "capacity": null,
+  "lat": 43.667051,
+  "lon": 4.02236,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-322125219",
+  "kind": "school",
+  "name": "Collège Les Pins",
+  "capacity": null,
+  "lat": 43.683251,
+  "lon": 3.989112,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-322125227",
+  "kind": "school",
+  "name": "École primaire le Chat Perché de la Guesse",
+  "capacity": null,
+  "lat": 43.681861,
+  "lon": 3.98382,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-322125229",
+  "kind": "school",
+  "name": "École élémentaire Marcel Pagnol",
+  "capacity": null,
+  "lat": 43.675414,
+  "lon": 3.981385,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-322129973",
+  "kind": "school",
+  "name": "École primaire Charles Perrault",
+  "capacity": null,
+  "lat": 43.751295,
+  "lon": 3.955937,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-323118766",
+  "kind": "school",
+  "name": "École Elémentaire Louise Michel",
+  "capacity": null,
+  "lat": 43.6884,
+  "lon": 4.138059,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-323705969",
+  "kind": "care_home",
+  "name": "EHPAD Chateau Nôtre-Dame",
+  "capacity": 84,
+  "lat": 43.873431,
+  "lon": 4.210485,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-329189146",
+  "kind": "school",
+  "name": "École maternelle",
+  "capacity": null,
+  "lat": 43.719849,
+  "lon": 4.175365,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-337040051",
+  "kind": "school",
+  "name": "École primaire Georges Bénédite",
+  "capacity": null,
+  "lat": 43.731227,
+  "lon": 4.141639,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-362775557",
+  "kind": "campsite",
+  "name": "Camping Mer et Camargue",
+  "capacity": 100,
+  "lat": 43.762846,
+  "lon": 4.197703,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-365705793",
+  "kind": "school",
+  "name": "MAM Les petits pas",
+  "capacity": null,
+  "lat": 43.852061,
+  "lon": 4.159487,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-371341119",
+  "kind": "care_home",
+  "name": "Les Mazets de l'Argilier",
+  "capacity": 66,
+  "lat": 43.751175,
+  "lon": 4.149556,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-387355792",
+  "kind": "school",
+  "name": "École maternelle la Ribambelle",
+  "capacity": null,
+  "lat": 43.661204,
+  "lon": 3.971204,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-387372248",
+  "kind": "school",
+  "name": "École élémentaire les Asphodèles",
+  "capacity": null,
+  "lat": 43.659462,
+  "lon": 3.966942,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-387372249",
+  "kind": "school",
+  "name": "École élémentaire les Garrigues",
+  "capacity": null,
+  "lat": 43.661822,
+  "lon": 3.970344,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-394994417",
+  "kind": "school",
+  "name": "École maternelle Antoine Geoffre",
+  "capacity": null,
+  "lat": 43.660381,
+  "lon": 4.010706,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-405015261",
+  "kind": "campsite",
+  "name": "Le Pré Saint-André",
+  "capacity": 70,
+  "lat": 43.816168,
+  "lon": 4.124515,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-408825717",
+  "kind": "school",
+  "name": "École maternelle les Arènes",
+  "capacity": null,
+  "lat": 43.697112,
+  "lon": 4.029882,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-426286135",
+  "kind": "school",
+  "name": "École primaire privée bilingue internationale",
+  "capacity": null,
+  "lat": 43.650403,
+  "lon": 4.00115,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-429881336",
+  "kind": "hospital",
+  "name": "Clinique Stella",
+  "capacity": null,
+  "lat": 43.717172,
+  "lon": 4.100609,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-452439739",
+  "kind": "school",
+  "name": "École primaire",
+  "capacity": null,
+  "lat": 43.727802,
+  "lon": 4.080245,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-489078017",
+  "kind": "care_home",
+  "name": "EHPAD Villa Marie",
+  "capacity": null,
+  "lat": 43.731656,
+  "lon": 3.979817,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-498846949",
+  "kind": "school",
+  "name": "Les Compagnons du Devoir et du Tour de France",
+  "capacity": null,
+  "lat": 43.66932,
+  "lon": 4.018395,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-498846968",
+  "kind": "school",
+  "name": "École privée bilingue internationale",
+  "capacity": null,
+  "lat": 43.65044,
+  "lon": 4.002463,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-505243539",
+  "kind": "school",
+  "name": "École primaire",
+  "capacity": null,
+  "lat": 43.758794,
+  "lon": 4.083901,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-506716333",
+  "kind": "campsite",
+  "name": "Le Mas de Reilhe",
+  "capacity": 92,
+  "lat": 43.878106,
+  "lon": 4.097246,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-507083551",
+  "kind": "school",
+  "name": "École primaire",
+  "capacity": null,
+  "lat": 43.790436,
+  "lon": 4.124582,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-508136670",
+  "kind": "school",
+  "name": "École élémentaire La Maurelle",
+  "capacity": null,
+  "lat": 43.719859,
+  "lon": 4.17362,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-510529537",
+  "kind": "school",
+  "name": "École primaire les Amandiers",
+  "capacity": null,
+  "lat": 43.741902,
+  "lon": 4.201569,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-527282695",
+  "kind": "school",
+  "name": "École primaire l'Île Verte",
+  "capacity": null,
+  "lat": 43.788591,
+  "lon": 4.204688,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-534555524",
+  "kind": "campsite",
+  "name": "L'Olivier",
+  "capacity": 45,
+  "lat": 43.770583,
+  "lon": 4.126136,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-534562304",
+  "kind": "campsite",
+  "name": "Les Chênes",
+  "capacity": 90,
+  "lat": 43.760842,
+  "lon": 4.1217,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-562504855",
+  "kind": "campsite",
+  "name": "Camping Fondespierre",
+  "capacity": null,
+  "lat": 43.695107,
+  "lon": 3.995606,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-566380109",
+  "kind": "hospital",
+  "name": "Pôle Santé Professeur Louis Serre",
+  "capacity": null,
+  "lat": 43.664926,
+  "lon": 4.124567,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-678819495",
+  "kind": "campsite",
+  "name": "Mas de Campagnani",
+  "capacity": 6,
+  "lat": 43.884784,
+  "lon": 4.000294,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-684020169",
+  "kind": "campsite",
+  "name": "Domaine de Gajan",
+  "capacity": 112,
+  "lat": 43.766623,
+  "lon": 4.073908,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-685103640",
+  "kind": "school",
+  "name": "École primaire Georges Bizet",
+  "capacity": null,
+  "lat": 43.809849,
+  "lon": 4.051038,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-744478828",
+  "kind": "school",
+  "name": "École du Parc",
+  "capacity": null,
+  "lat": 43.676259,
+  "lon": 4.130225,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-761541859",
+  "kind": "care_home",
+  "name": "EHPAD Centre Hospitalier de Lunel",
+  "capacity": 106,
+  "lat": 43.675119,
+  "lon": 4.131487,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-761806238",
+  "kind": "care_home",
+  "name": "Résidence - Petite Unité de Vie Fanfonne Guillierme",
+  "capacity": null,
+  "lat": 43.685176,
+  "lon": 4.212301,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-764543005",
+  "kind": "hospital",
+  "name": "Centre hospitalier universitaire Montpellier - Service mobile d'urgence et de réanimation - Antenne centre hospitalier Lunel",
+  "capacity": null,
+  "lat": 43.675239,
+  "lon": 4.131501,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-764543006",
+  "kind": "hospital",
+  "name": "Centre de Long Séjour Brunel",
+  "capacity": null,
+  "lat": 43.6748,
+  "lon": 4.128423,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-829098197",
+  "kind": "school",
+  "name": "École élémentaire Jean-Pierre Chabrol",
+  "capacity": null,
+  "lat": 43.908563,
+  "lon": 4.193736,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-858721380",
+  "kind": "care_home",
+  "name": "Résidence La Jolivade",
+  "capacity": 63,
+  "lat": 43.677768,
+  "lon": 4.096858,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-876506384",
+  "kind": "school",
+  "name": "École Maternelle Alice Brun",
+  "capacity": null,
+  "lat": 43.909289,
+  "lon": 4.002375,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-878852684",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.86104,
+  "lon": 3.98864,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-905452669",
+  "kind": "school",
+  "name": "Lycée Polyvalent Lucie Aubrac",
+  "capacity": null,
+  "lat": 43.77645,
+  "lon": 4.069773,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-906636006",
+  "kind": "school",
+  "name": "École élémentaire Victor Hugo",
+  "capacity": null,
+  "lat": 43.678445,
+  "lon": 4.133572,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-908725521",
+  "kind": "school",
+  "name": "École maternelle Les Petits Poucets",
+  "capacity": null,
+  "lat": 43.732242,
+  "lon": 3.979244,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-908725522",
+  "kind": "school",
+  "name": "École élémentaire",
+  "capacity": null,
+  "lat": 43.732295,
+  "lon": 3.978564,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-913944972",
+  "kind": "school",
+  "name": "École élémentaire Mario Roustan",
+  "capacity": null,
+  "lat": 43.670439,
+  "lon": 4.126049,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-969820382",
+  "kind": "school",
+  "name": "École primaire Simone de Beauvoir",
+  "capacity": null,
+  "lat": 43.769876,
+  "lon": 4.120926,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-981967877",
+  "kind": "school",
+  "name": "École primaire de Galargues",
+  "capacity": null,
+  "lat": 43.769735,
+  "lon": 4.021604,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-987116457",
+  "kind": "school",
+  "name": "École Maternelle Saint-Exupéry",
+  "capacity": null,
+  "lat": 43.721693,
+  "lon": 4.114234,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1013299920",
+  "kind": "school",
+  "name": "École maternelle Pont de Vesse",
+  "capacity": null,
+  "lat": 43.67541,
+  "lon": 4.138569,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1026661291",
+  "kind": "school",
+  "name": "École primaire privée Sainte Marie",
+  "capacity": null,
+  "lat": 43.677926,
+  "lon": 3.982391,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1050615505",
+  "kind": "school",
+  "name": "École élémentaire Simone Veil",
+  "capacity": null,
+  "lat": 43.685242,
+  "lon": 4.211961,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1106160388",
+  "kind": "school",
+  "name": "École Montessori des Leins (École secondaire privée)",
+  "capacity": null,
+  "lat": 43.926945,
+  "lon": 4.120954,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1117164767",
+  "kind": "school",
+  "name": "École Primaire de Gajan",
+  "capacity": null,
+  "lat": 43.896504,
+  "lon": 4.213357,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1117239192",
+  "kind": "school",
+  "name": "École maternelle Les Péquélets",
+  "capacity": null,
+  "lat": 43.889364,
+  "lon": 4.189346,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1156391854",
+  "kind": "campsite",
+  "name": "Les lodges du lagon",
+  "capacity": null,
+  "lat": 43.758204,
+  "lon": 4.197628,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1191619561",
+  "kind": "school",
+  "name": "École primaire Lou Fraïssinet",
+  "capacity": null,
+  "lat": 43.814431,
+  "lon": 4.123106,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1227157516",
+  "kind": "school",
+  "name": "Ecole maternelle Le Petit Prince",
+  "capacity": null,
+  "lat": 43.664196,
+  "lon": 4.032682,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1303852372",
+  "kind": "campsite",
+  "name": "Club Nature et Soleil de Sardan",
+  "capacity": null,
+  "lat": 43.877347,
+  "lon": 4.053322,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1322617462",
+  "kind": "school",
+  "name": "École élémentaire Antoine de Saint Exupéry",
+  "capacity": null,
+  "lat": 43.664601,
+  "lon": 4.032784,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1365821729",
+  "kind": "school",
+  "name": "Collège Claude Chappe",
+  "capacity": null,
+  "lat": 43.717909,
+  "lon": 4.176384,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-way-1419658833",
+  "kind": "school",
+  "name": "Ecole Lucie AUBRAC",
+  "capacity": null,
+  "lat": 43.909183,
+  "lon": 4.193135,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-relation-2453157",
+  "kind": "school",
+  "name": "École élémentaire privée Maintenon",
+  "capacity": null,
+  "lat": 43.784881,
+  "lon": 4.089408,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-relation-4740401",
+  "kind": "school",
+  "name": "École primaire Sainte-Marie",
+  "capacity": null,
+  "lat": 43.664575,
+  "lon": 4.177618,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-relation-6702034",
+  "kind": "school",
+  "name": "École élémentaire Georges Brassens - Jacques Brel",
+  "capacity": null,
+  "lat": 43.659263,
+  "lon": 4.011202,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-relation-11731314",
+  "kind": "campsite",
+  "name": "Domaine de Massereau",
+  "capacity": null,
+  "lat": 43.767564,
+  "lon": 4.100687,
+  "elevation_m": null,
+  "source": "OSM"
+ },
+ {
+  "id": "osm-relation-17386129",
+  "kind": "school",
+  "name": "École primaire privée Saint Joseph",
+  "capacity": null,
+  "lat": 43.6582,
+  "lon": 3.966512,
+  "elevation_m": null,
+  "source": "OSM"
+ }
+]

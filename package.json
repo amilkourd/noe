@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "data:gauges": "tsx scripts/fetch-gauges.ts",
+    "data:osm": "tsx scripts/fetch-osm.ts",
+    "data:terrain": "tsx scripts/build-terrain.ts",
+    "data:personas": "tsx scripts/seed.ts --personas",
+    "db:seed": "tsx scripts/seed.ts",
+    "smoke": "tsx scripts/smoke.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.1.0",

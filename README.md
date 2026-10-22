@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NOÉ · flood decision copilot (hackathon demo)
 
-## Getting Started
+NOÉ is the "brain": a long-running Node process inside this Next.js server. It replays real Hub'Eau gauge data for the Vidourle (19–20 Oct 2026), forecasts the Sommières overflow, maps exposure with an approximate flood model, places DOVE calls, drafts rescuer assignments and produces copilot suggestions. A human always gives the order.
 
-First, run the development server:
+Surfaces:
+- **DOVE** (resident, web): `/dove/[residentId]`, which rings in the browser and runs an ElevenLabs Agent over WebRTC.
+- **RAVEN** (rescuer, Expo app, built separately): polls `GET /api/raven/[rescuerId]` and uses the PATCH endpoints.
+- **ARK** (command, web): not built yet. It consumes `GET /api/state` plus the SSE stream at `GET /api/stream`.
+
+Honesty labels used everywhere:
+- "REPLAY · real data 19–20 Oct 2026"
+- "demo persona"
+- "demo threshold" (2.0 m at Sommières)
+- "approximate flood model"
+
+## Runbook
+
+### 1. Env vars (`.env.local`, template in `.env.example`)
+
+| var | purpose |
+|---|---|
+| `DATABASE_URL` | Aiven PostgreSQL (PostGIS) service URI. Any `sslmode` in the URL is ignored in favour of the CA below. |
+| `AIVEN_CA_CERT` | Aiven CA PEM. Real newlines, or a single line with literal `\n`. |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Copilot LLM (default `claude-haiku-5-5`). If either is missing or fails, it falls back to template insights. |
+| `ELEVENLABS_AGENT_ID` | DOVE voice agent, read at request time, so a restart is enough. `NEXT_PUBLIC_ELEVENLABS_AGENT_ID` also works but is frozen at build. See `docs/elevenlabs-agent.md`. |
+| `REPLAY_START`, `REPLAY_END`, `REPLAY_SPEED` | Default `2026-10-19T18:00:00Z`, `2026-10-20T12:00:00Z`, `60` (1 real s = 60 sim s). `reset` restores this speed. |
+
+### 2. One-time setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+# data/*.json is already built from cached raw data; to rebuild: npm run data:gauges && npm run data:osm && npm run data:terrain && npm run data:personas
+npm run db:seed            # drops + recreates every table from db/schema.sql, then loads stations, raw observations, sites, personas
+                           # (npm run db:seed -- --dry-run to check without a DB)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Run
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build && npm start                     # http://localhost:3000
+cloudflared tunnel --url http://localhost:3000 # HTTPS for phones (the mic needs HTTPS)
+npm run smoke -- https://<tunnel>.trycloudflare.com   # optional rehearsal (it resets and runs at ×600)
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Before going on stage, run `POST /api/replay {"action":"reset"}`. A fresh process does not truncate the previous run's data, and reset also restores the ×60 speed.
 
-## Learn More
+### 4. Demo URLs
 
-To learn more about Next.js, take a look at the following resources:
+- `/dove/res-garcia` is the resident phone (Spanish, Mrs García, demo persona). Tap once to arm it (audio, mic, wake lock). Add `?demo=1` to get a "Simulate alert" button that works without the backend.
+- `/api/raven/rb-karim` is the RAVEN view for Karim Becker (DLRG, T3). The app sends `PATCH /api/rescuers/rb-karim {"available":true}`. Coordinates are ignored for demo personas.
+- `/api/state` is the full snapshot for ARK, and `/api/stream` is SSE. Add `?tables=dove_calls,reset,clock` to filter the event types.
+- `/api/evidence` gives the pitch numbers, each labelled REPLAY or SCENARIO · simulated personas.
+- `/api/terrain` serves the grid, roads and river for the map.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 5. Replay controls
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+curl -X POST $URL/api/replay -H 'content-type: application/json' -d '{"action":"start"}'
+curl -X POST $URL/api/replay -H 'content-type: application/json' -d '{"action":"pause"}'
+curl -X POST $URL/api/replay -H 'content-type: application/json' -d '{"action":"speed","speed":120}'   # clamped 10..600
+curl -X POST $URL/api/replay -H 'content-type: application/json' -d '{"action":"reset"}'
+```
 
-## Deploy on Vercel
+When NOÉ places the live DOVE call to `res-garcia` (around 03:30 Paris sim time), the replay slows itself to ×10. That leaves about 7 real minutes for the call, the RAVEN availability toggle and the ARK order before the water arrives (around 04:45). Speed it back up afterwards.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Other endpoints
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `PATCH /api/rescuers/[id]` with `{available}`
+- `POST /api/missions` with `{rescuerId,targetType,targetId,requiredTier,routeNote?,insightId?}`. Returns 409 with `T3_REQUIRED`, `RESCUER_BUSY` or `RESCUER_UNAVAILABLE`, and is idempotent per rescuer and target.
+- `PATCH /api/missions/[id]`
+- `POST /api/status` with `{residentId,status,can_climb_stairs?,notes?,channel}`
+- `PATCH /api/insights/[id]`
+- `GET /api/dove/[residentId]`
+- `PATCH /api/dove-calls/[id]` with `{state}`
+
+### Offline checks (no DB)
+
+```bash
+npx tsc --noEmit
+npx tsx scripts/sim-offline.ts   # replays the real data through forecaster, exposure, dispatcher and template copilot
+```
