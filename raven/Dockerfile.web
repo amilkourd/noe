@@ -1,0 +1,14 @@
+# RAVEN as a web app on Aiven Runtime. Build context: raven/
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+ENV EXPO_PUBLIC_NOE_SAME_ORIGIN=1 EXPO_PUBLIC_RAVEN_DEMO=0 EXPO_PUBLIC_RESCUER_ID=rb-karim
+RUN npx expo export --platform web --output-dir dist
+
+FROM nginx:1.27-alpine
+ENV PORT=8080 NOE_API=https://01a16356-32af-7d6d-985d-9518444c332b-3000.eur-1.aiven.app
+COPY web/default.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 8080
