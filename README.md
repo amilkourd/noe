@@ -21,7 +21,7 @@ Honesty labels used everywhere:
 |---|---|
 | `DATABASE_URL` | Aiven PostgreSQL (PostGIS) service URI. Any `sslmode` in the URL is ignored in favour of the CA below. |
 | `AIVEN_CA_CERT` | Aiven CA PEM. Real newlines, or a single line with literal `\n`. Not needed on Aiven Runtime, which injects `PROJECT_CA_CERT` (read by `lib/db.ts`). |
-| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Copilot LLM (default `claude-haiku-5-5`). If either is missing or fails, it falls back to template insights. |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Copilot LLM (default `claude-sonnet-5-5`). If either is missing or fails, it falls back to template insights. |
 | `ELEVENLABS_AGENT_ID` | DOVE voice agent, read at request time, so a restart is enough. `NEXT_PUBLIC_ELEVENLABS_AGENT_ID` also works but is frozen at build. See `docs/elevenlabs-agent.md`. |
 | `REPLAY_START`, `REPLAY_END`, `REPLAY_SPEED` | Default `2026-10-19T18:00:00Z`, `2026-10-20T12:00:00Z`, `60` (1 real s = 60 sim s). `reset` restores this speed. |
 

@@ -38,6 +38,7 @@ export const SYSTEM_PROMPT = `You are NOÉ, the decision copilot for a flood inc
 Use ONLY the JSON state provided. Never invent people, places, roads, numbers or capacities.
 Every insight cites the ids it relies on. Give an honest confidence (0–1).
 Max 4 insights, most urgent first, short and concrete, in English.
+All timestamps in the state are UTC (ISO 8601). Write every time in Paris local time (UTC+2 on these dates), as HH:MM.
 Safety: only T3 swiftwater-certified rescuers may be assigned to a target that already has water.
 You suggest; the human commander decides. Never phrase an insight as an order already given.
 
@@ -118,7 +119,7 @@ const InsightZ = z.object({
     targetId: z.string().nullish(),
     requiredTier: z.enum(["T1", "T2", "T3"]).nullish(),
     routeNote: z.string().nullish(),
-  }).passthrough(),
+  }).passthrough().catch({ type: "none" as const }), // without forced tool_choice (Sonnet 5.5) a missing action must not sink the batch
 });
 const OutputZ = z.object({ insights: z.array(z.unknown()).transform((a) => a.slice(0, 4)).pipe(z.array(InsightZ)) });
 
@@ -406,23 +407,34 @@ function fit(n: number, parts: (Part | null | false | undefined | "")[]): { text
 let client: Anthropic | null = null;
 function getClient(): Anthropic { return (client ??= new Anthropic()); }
 
+// Sonnet 5.5 / Opus 5.5 / Fable 5.1 reject forced tool_choice (400): they start with auto + the explicit instruction.
+const NO_FORCED_TOOL = /(sonnet-5-5|opus-5-5|fable-5-1|mythos-5-1)/;
+// Server-side refusal fallback ("default" routing) on the models that support it: a decline is re-run on another model.
+const SERVER_FALLBACK = /(sonnet-5-5|opus-5-5|opus-5$|fable-5-1)/;
+
 export async function runCopilot(input: CopilotInput): Promise<InsightDraft[]> {
   if (!process.env.ANTHROPIC_API_KEY) return templateInsights(input);
-  const model = process.env.ANTHROPIC_MODEL || "claude-haiku-5-5";
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
   const user = `State (JSON):\n${JSON.stringify(input)}\n\nCall ${TOOL_NAME} exactly once with at most 4 insights.`;
-  let forced = true; // forced tool_choice; models that reject it (400) get auto + explicit instruction
+  let forced = !NO_FORCED_TOOL.test(model); // models that still reject it (400) fall back to auto below
+  const timeout = /haiku/.test(model) ? 12_000 : 30_000; // Sonnet thinks before the tool call
   let failures = 0;
   while (failures < 2) { // first try + 1 retry
     try {
-      const params: Anthropic.MessageCreateParamsNonStreaming = {
-        model, max_tokens: 2000, system: SYSTEM_PROMPT, tools: [EMIT_TOOL],
+      const params: Anthropic.Beta.Messages.MessageCreateParamsNonStreaming = {
+        model, max_tokens: 4000, system: SYSTEM_PROMPT, tools: [EMIT_TOOL],
         messages: [{ role: "user", content: user }],
         tool_choice: forced ? { type: "tool", name: TOOL_NAME } : { type: "auto", disable_parallel_tool_use: true },
       };
+      // Haiku 5.5 accepts disabled thinking with a forced tool; Sonnet 5.5 rejects "disabled" and keeps adaptive thinking
       if (forced && /haiku-5/.test(model)) params.thinking = { type: "disabled" };
       if (!forced) params.output_config = { effort: "low" };
-      const res = await getClient().messages.create(params, { timeout: 12_000, maxRetries: 0 });
-      const block = res.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === TOOL_NAME);
+      if (SERVER_FALLBACK.test(model)) {
+        params.betas = ["server-side-fallback-2026-07-01"];
+        params.fallbacks = "default";
+      }
+      const res = await getClient().beta.messages.create(params, { timeout, maxRetries: 0 });
+      const block = res.content.find((b): b is Anthropic.Beta.Messages.BetaToolUseBlock => b.type === "tool_use" && b.name === TOOL_NAME);
       if (!block) throw new Error(`no ${TOOL_NAME} call (stop_reason ${res.stop_reason})`);
       const parsed = OutputZ.parse(block.input);
       const drafts: InsightDraft[] = parsed.insights.map((i) => ({
