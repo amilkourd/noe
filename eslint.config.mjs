@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // RAVEN is a separate Expo app with its own tooling
+    "raven/**",
   ]),
 ]);
 
