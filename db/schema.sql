@@ -50,7 +50,8 @@ create table missions (
 );
 create table status_reports (
   id bigserial primary key, resident_id text references residents(id),
-  status text check (status in ('safe','needs_help')), can_climb_stairs boolean, notes text,
+  -- needs_help = urgent, unstable = OK for now but fragile, safe = not urgent (judged by the DOVE agent from the call)
+  status text check (status in ('safe','unstable','needs_help')), can_climb_stairs boolean, notes text,
   channel text default 'voice', created_at timestamptz default now()
 );
 create table insights (

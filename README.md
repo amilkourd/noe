@@ -20,7 +20,7 @@ Honesty labels used everywhere:
 | var | purpose |
 |---|---|
 | `DATABASE_URL` | Aiven PostgreSQL (PostGIS) service URI. Any `sslmode` in the URL is ignored in favour of the CA below. |
-| `AIVEN_CA_CERT` | Aiven CA PEM. Real newlines, or a single line with literal `\n`. |
+| `AIVEN_CA_CERT` | Aiven CA PEM. Real newlines, or a single line with literal `\n`. Not needed on Aiven Runtime, which injects `PROJECT_CA_CERT` (read by `lib/db.ts`). |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Copilot LLM (default `claude-haiku-5-5`). If either is missing or fails, it falls back to template insights. |
 | `ELEVENLABS_AGENT_ID` | DOVE voice agent, read at request time, so a restart is enough. `NEXT_PUBLIC_ELEVENLABS_AGENT_ID` also works but is frozen at build. See `docs/elevenlabs-agent.md`. |
 | `REPLAY_START`, `REPLAY_END`, `REPLAY_SPEED` | Default `2026-10-19T18:00:00Z`, `2026-10-20T12:00:00Z`, `60` (1 real s = 60 sim s). `reset` restores this speed. |
@@ -36,17 +36,24 @@ npm run db:seed            # drops + recreates every table from db/schema.sql, t
 
 ### 3. Run
 
+Production runs on **Aiven Runtime** from the `Dockerfile` (port 3000). Its HTTPS URL is what phones open, so no tunnel is needed (the mic requires HTTPS). Set the env vars above on the Aiven application, and keep it at **one instance**: the replay clock and agent pipeline live in memory, so ARK, DOVE and RAVEN must all hit the same process.
+
+```bash
+npm run smoke -- https://<app>.aiven.app   # optional rehearsal against the deployed app (it resets and runs at ×600)
+```
+
+Locally:
+
 ```bash
 npm run build && npm start                     # http://localhost:3000
-cloudflared tunnel --url http://localhost:3000 # HTTPS for phones (the mic needs HTTPS)
-npm run smoke -- https://<tunnel>.trycloudflare.com   # optional rehearsal (it resets and runs at ×600)
+cloudflared tunnel --url http://localhost:3000 # only for phone tests against a local server
 ```
 
 Before going on stage, run `POST /api/replay {"action":"reset"}`. A fresh process does not truncate the previous run's data, and reset also restores the ×60 speed.
 
 ### 4. Demo URLs
 
-- `/dove/res-garcia` is the resident phone (Spanish, Mrs García, demo persona). Tap once to arm it (audio, mic, wake lock). Add `?demo=1` to get a "Simulate alert" button that works without the backend.
+- `/dove/res-garcia` is the resident phone (Mrs Garcia, demo persona; the agent speaks English). Tap once to arm it (audio, mic, wake lock). Add `?demo=1` to get a "Simulate alert" button that works without the backend. The agent rates each call `urgent` / `unstable` / `ok` (stored as `needs_help` / `unstable` / `safe`); see `docs/elevenlabs-agent.md`.
 - `/api/raven/rb-karim` is the RAVEN view for Karim Becker (DLRG, T3). The app sends `PATCH /api/rescuers/rb-karim {"available":true}`. Coordinates are ignored for demo personas.
 - `/api/state` is the full snapshot for ARK, and `/api/stream` is SSE. Add `?tables=dove_calls,reset,clock` to filter the event types.
 - `/api/evidence` gives the pitch numbers, each labelled REPLAY or SCENARIO · simulated personas.

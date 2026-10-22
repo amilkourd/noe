@@ -7,7 +7,8 @@ export type Tier = "T1" | "T2" | "T3";
 export type Mobility = "ok" | "reduced" | "bedridden";
 export type SiteKind = "care_home" | "school" | "campsite" | "hospital";
 export type MissionStatus = "sent" | "accepted" | "en_route" | "on_site" | "done" | "backup";
-export type ResidentStatus = "safe" | "needs_help";
+// Urgency judged from the DOVE call: needs_help = urgent, unstable = OK for now but fragile, safe = not urgent.
+export type ResidentStatus = "safe" | "unstable" | "needs_help";
 export type DoveCallState = "ringing" | "accepted" | "declined" | "ended" | "missed";
 export type AgentName = "watcher" | "forecaster" | "exposure" | "dispatcher" | "voice" | "copilot" | "replay";
 export type DataMode = "REPLAY" | "SCENARIO" | "LIVE";

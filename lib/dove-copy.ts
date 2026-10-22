@@ -115,7 +115,7 @@ export interface DoveUi {
   connecting: string; speaking: string; listening: string;
   voiceUnavailable: string; imSafe: string; needHelp: string; endCall: string;
   reached: string; callEnded: string; declined: string; instruction: string;
-  sending: string;
+  sending: string; watching: string;
 }
 
 export const UI: Record<DoveLang, DoveUi> = {
@@ -126,7 +126,7 @@ export const UI: Record<DoveLang, DoveUi> = {
     connecting: "Connecting…", speaking: "Noé is speaking", listening: "Listening",
     voiceUnavailable: "Voice unavailable · use the buttons", imSafe: "I'm safe", needHelp: "I need help", endCall: "End call",
     reached: "Your answer reached the rescue team.", callEnded: "Call ended", declined: "Call declined",
-    instruction: "Official instruction", sending: "Sending…",
+    instruction: "Official instruction", sending: "Sending…", watching: "The team will keep checking on you.",
   },
   fr: {
     armTitle: "Touchez pour activer cet appareil", armHint: "Autorise le son, le micro et garde l'écran allumé.",
@@ -135,7 +135,7 @@ export const UI: Record<DoveLang, DoveUi> = {
     connecting: "Connexion…", speaking: "Noé parle", listening: "À l'écoute",
     voiceUnavailable: "Voix indisponible · utilisez les boutons", imSafe: "Je suis en sécurité", needHelp: "J'ai besoin d'aide", endCall: "Raccrocher",
     reached: "Votre réponse a été transmise aux secours.", callEnded: "Appel terminé", declined: "Appel refusé",
-    instruction: "Consigne officielle", sending: "Envoi…",
+    instruction: "Consigne officielle", sending: "Envoi…", watching: "L'équipe va continuer à prendre de vos nouvelles.",
   },
   es: {
     armTitle: "Toque para activar este dispositivo", armHint: "Permite el sonido, el micrófono y mantiene la pantalla encendida.",
@@ -144,7 +144,7 @@ export const UI: Record<DoveLang, DoveUi> = {
     connecting: "Conectando…", speaking: "Noé está hablando", listening: "Escuchando",
     voiceUnavailable: "Voz no disponible · use los botones", imSafe: "Estoy a salvo", needHelp: "Necesito ayuda", endCall: "Colgar",
     reached: "Su respuesta ha llegado al equipo de rescate.", callEnded: "Llamada finalizada", declined: "Llamada rechazada",
-    instruction: "Instrucción oficial", sending: "Enviando…",
+    instruction: "Instrucción oficial", sending: "Enviando…", watching: "El equipo seguirá pendiente de usted.",
   },
   pt: {
     armTitle: "Toque para ativar este dispositivo", armHint: "Permite som, microfone e mantém o ecrã ligado.",
@@ -153,7 +153,7 @@ export const UI: Record<DoveLang, DoveUi> = {
     connecting: "A ligar…", speaking: "A Noé está a falar", listening: "A ouvir",
     voiceUnavailable: "Voz indisponível · use os botões", imSafe: "Estou em segurança", needHelp: "Preciso de ajuda", endCall: "Desligar",
     reached: "A sua resposta chegou à equipa de socorro.", callEnded: "Chamada terminada", declined: "Chamada recusada",
-    instruction: "Instrução oficial", sending: "A enviar…",
+    instruction: "Instrução oficial", sending: "A enviar…", watching: "A equipa vai continuar a acompanhá-lo.",
   },
   ar: {
     armTitle: "المس لتفعيل هذا الجهاز", armHint: "يسمح بالصوت والميكروفون ويبقي الشاشة مضاءة.",
@@ -162,7 +162,7 @@ export const UI: Record<DoveLang, DoveUi> = {
     connecting: "جارٍ الاتصال…", speaking: "نوي تتحدث", listening: "أستمع",
     voiceUnavailable: "الصوت غير متاح · استخدم الأزرار", imSafe: "أنا بأمان", needHelp: "أحتاج مساعدة", endCall: "إنهاء المكالمة",
     reached: "وصل ردك إلى فريق الإنقاذ.", callEnded: "انتهت المكالمة", declined: "تم رفض المكالمة",
-    instruction: "التعليمات الرسمية", sending: "جارٍ الإرسال…",
+    instruction: "التعليمات الرسمية", sending: "جارٍ الإرسال…", watching: "سيواصل الفريق الاطمئنان عليك.",
   },
 };
 

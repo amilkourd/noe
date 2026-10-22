@@ -58,7 +58,7 @@ export function seededRand(id: string, salt = "noe"): () => number {
 
 // ---------- queue ----------
 export type SimItem =
-  | { kind: "resident"; dueMs: number; residentId: string; doveCallId: number; outcome: "safe" | "needs_help" | "missed" }
+  | { kind: "resident"; dueMs: number; residentId: string; doveCallId: number; outcome: "safe" | "unstable" | "needs_help" | "missed" }
   | { kind: "rescuer"; dueMs: number; rescuerId: string };
 
 export interface SimCtx {
@@ -75,7 +75,8 @@ export function scheduleResidentOutcome(queue: SimItem[], residentId: string, do
   const rnd = seededRand(residentId, "dove");
   const delay = (3 + rnd() * 17) * MIN; // 3..20 sim-min
   const r = rnd();
-  const outcome = r < 0.84 ? "safe" : r < 0.9 ? "needs_help" : "missed";
+  // unstable is carved out of the old safe range, so the same personas still need help as before
+  const outcome = r < 0.7 ? "safe" : r < 0.84 ? "unstable" : r < 0.9 ? "needs_help" : "missed";
   queue.push({ kind: "resident", dueMs: callSimMs + delay, residentId, doveCallId, outcome });
 }
 
@@ -120,7 +121,9 @@ async function runResident(item: Extract<SimItem, { kind: "resident" }>, ctx: Si
   );
   await ctx.log(
     "voice",
-    needs ? `${res.name}: needs help · cannot climb stairs` : `${res.name}: safe`,
+    needs
+      ? `${res.name}: urgent · cannot climb stairs`
+      : item.outcome === "unstable" ? `${res.name}: OK for now · unstable` : `${res.name}: safe`,
     { event: "status", residentId: res.id, status: item.outcome, channel: "voice", simulated: true },
   );
   if (needs) ctx.notifyNeed("needs_help");

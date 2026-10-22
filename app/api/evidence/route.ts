@@ -75,6 +75,7 @@ export async function GET() {
          (select count(distinct x.target_id) from exposures x where x.target_type = 'site')::int as sites_exposed,
          (select count(*) from dove_calls)::int as contacted,
          (select count(*) from (select distinct on (resident_id) status from status_reports order by resident_id, created_at desc, id desc) s where s.status = 'safe')::int as safe,
+         (select count(*) from (select distinct on (resident_id) status from status_reports order by resident_id, created_at desc, id desc) s where s.status = 'unstable')::int as unstable,
          (select count(*) from (select distinct on (resident_id) status from status_reports order by resident_id, created_at desc, id desc) s where s.status = 'needs_help')::int as need_help,
          (select count(*) from dove_calls where state = 'missed')::int as no_answer,
          (select count(*) from missions)::int as missions_sent,
@@ -133,7 +134,7 @@ export async function GET() {
           label, unit: "s (real)", medianS: r1(median(secs(assignReal))), missions: assignReal,
           simulated: { label: SCENARIO_SIM, medianS: r1(median(secs(assignSim))), missions: assignSim },
         },
-        // answers (safe / needs help / no answer) come mostly from the seeded persona simulation
+        // answers (safe / unstable / needs help / no answer) come mostly from the seeded persona simulation
         coverage: { label: SCENARIO_SIM, ...(cov ?? {}) },
         etaError: etaError ? { label, ...etaError } : null,
       },

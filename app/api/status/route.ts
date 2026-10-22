@@ -6,7 +6,7 @@ import { guard, jsonError, parseBody } from "@/lib/state";
 
 const Body = z.object({
   residentId: z.string().min(1),
-  status: z.enum(["safe", "needs_help"]),
+  status: z.enum(["safe", "unstable", "needs_help"]),
   can_climb_stairs: z.boolean().nullish(),
   notes: z.string().max(1000).nullish(),
   channel: z.enum(["voice", "button"]).default("voice"),
@@ -31,7 +31,8 @@ export async function POST(req: Request) {
       );
     }
     const stairs = body.can_climb_stairs === false ? " · cannot climb stairs" : body.can_climb_stairs === true ? " · can go upstairs" : "";
-    await logAgent("voice", `${res.name}: ${body.status === "needs_help" ? "needs help" : "safe"}${stairs} (${body.channel})`, {
+    const label = body.status === "needs_help" ? "urgent · needs help" : body.status === "unstable" ? "OK for now · unstable" : "safe";
+    await logAgent("voice", `${res.name}: ${label}${stairs} (${body.channel})`, {
       event: "status", residentId: res.id, status: body.status, channel: body.channel, statusId: row?.id ?? null,
     });
     if (body.status === "needs_help") notifyNeed("needs_help");

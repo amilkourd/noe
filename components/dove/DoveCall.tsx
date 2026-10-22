@@ -37,8 +37,8 @@ function callKey(c: { id: number; created_at: string }): string {
 }
 
 function demoInfo(residentId: string): DoveInfo {
-  const lang: DoveLang = "es";
-  const name = "señora García";
+  const lang: DoveLang = "en";
+  const name = "Mrs Garcia";
   return {
     resident: { id: residentId, name, language: lang, age: 84, persona: true },
     town: "Sommières", instruction: INSTRUCTION[lang], eta: null,
@@ -98,7 +98,8 @@ function DoveScreen({ residentId, demo }: { residentId: string; demo: boolean })
   const infoRef = useRef<DoveInfo | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
 
-  const lang: DoveLang = doveLang(info?.resident.language);
+  // English until /api/dove answers (DOVE is English-only for now), so a slow load never flashes another language
+  const lang: DoveLang = info ? doveLang(info.resident.language) : "en";
   const ui = UI[lang];
   const en = UI.en;
 
@@ -124,8 +125,10 @@ function DoveScreen({ residentId, demo }: { residentId: string; demo: boolean })
   // ---------- ElevenLabs conversation ----------
   const conv = useConversation({
     clientTools: {
-      report_status: async (p: { status?: string; can_climb_stairs?: boolean; notes?: string }) => {
-        const status: ResidentStatus = p?.status === "safe" ? "safe" : "needs_help";
+      report_status: async (p: { urgency?: string; status?: string; can_climb_stairs?: boolean; notes?: string }) => {
+        // urgency (ok | unstable | urgent) is the agent's judgement of the whole conversation; status is the older param
+        const u = p?.urgency ?? p?.status;
+        const status: ResidentStatus = u === "ok" || u === "safe" ? "safe" : u === "unstable" ? "unstable" : "needs_help";
         const ok = await postStatus(status, typeof p?.can_climb_stairs === "boolean" ? p.can_climb_stairs : null, p?.notes ?? null, "voice");
         return ok ? "recorded" : "not recorded: ask the person to press the button on their screen";
       },
@@ -314,7 +317,8 @@ function DoveScreen({ residentId, demo }: { residentId: string; demo: boolean })
         agentId,
         connectionType: "webrtc",
         dynamicVariables: { name: i.resident.name, town: i.town, instruction: i.instruction, eta: i.eta ?? ETA_UNKNOWN[l] },
-        overrides: { agent: { language: l, firstMessage: i.firstMessage } },
+        // English is the agent's default language: only other languages need the Language override enabled
+        overrides: { agent: l === "en" ? { firstMessage: i.firstMessage } : { language: l, firstMessage: i.firstMessage } },
       });
     } catch { voiceFail(); }
   };
@@ -627,7 +631,7 @@ function ReachedCard({ lang, status, compact = false }: { lang: DoveLang; status
   const icon = status === "safe"
     ? <ShieldIcon size={compact ? 22 : 36} color="var(--noe-safe)" />
     : <TriangleIcon size={compact ? 22 : 36} color="var(--noe-warn)" />;
-  const statusLabel = status === "safe" ? ui.imSafe : ui.needHelp;
+  const statusLabel = status === "safe" ? ui.imSafe : status === "unstable" ? ui.watching : ui.needHelp;
   return (
     <div className={`flex items-center gap-4 rounded-3xl border border-noe-line bg-noe-surface ${compact ? "px-4 py-3" : "flex-col p-7 text-center"}`}>
       {icon}

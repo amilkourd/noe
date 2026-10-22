@@ -2,10 +2,12 @@ import { NextResponse, connection } from "next/server";
 import { one } from "@/lib/db";
 import { getClock } from "@/lib/replay";
 import type { DoveCall } from "@/lib/types";
-import { doveLang, firstMessage, humanEta, INSTRUCTION, type DoveInfo } from "@/lib/dove-copy";
+import { doveLang, firstMessage, humanEta, INSTRUCTION, type DoveInfo, type DoveLang } from "@/lib/dove-copy";
 
 
 const TOWN = "Sommières";
+// DOVE speaks English to everyone for now. null = each resident's own language (copy exists for fr/es/ar/pt/en).
+const FORCE_LANG: DoveLang | null = "en";
 
 interface ResidentRow { id: string; name: string; language: string | null; age: number | null; persona: boolean | null }
 interface ExposureRow { eta: Date | string | null; depth_m: number | null; sim_time: Date | string }
@@ -28,7 +30,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ residen
     );
     if (!r) return NextResponse.json({ error: "unknown resident" }, { status: 404 });
 
-    const lang = doveLang(r.language);
+    const lang = FORCE_LANG ?? doveLang(r.language);
 
     // Latest exposure of this resident, only if it belongs to the latest forecast that produced exposures.
     const exp = await one<ExposureRow>(
