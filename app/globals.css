@@ -1,26 +1,50 @@
 @import "tailwindcss";
+@import "@heroui/styles";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+:root, .dark {
+  --noe-bg: #0E0F11;          /* page */
+  --noe-surface: #15171A;     /* panels */
+  --noe-surface-2: #1C1F23;   /* pills, chips, inputs */
+  --noe-line: rgba(255,255,255,0.07);
+  --noe-text: #F3F5F6;
+  --noe-muted: #8D949B;       /* lowest allowed for text < 24px */
+
+  /* terrain (land), teal scale low -> high */
+  --noe-land-1: #0F3B33; --noe-land-2: #17604F; --noe-land-3: #23977A;
+  --noe-land-4: #3FD1A6; --noe-land-5: #A6F0D6;
+  --noe-urban: #C07A3E;
+
+  /* water / flood, light-blue scale shallow -> deep */
+  --noe-water-1: #1E5A8A; --noe-water-2: #3B9EDB; --noe-water-3: #7DD3FC; --noe-water-4: #BAE6FD;
+
+  --noe-safe: #8BD17C;
+  --noe-warn: #FF9F43;
+  --noe-danger: #FF5A5F;
+  --noe-glow: rgba(63,209,166,0.18);
+  --radius: 16px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-urbanist);
+  --color-noe-bg: var(--noe-bg);
+  --color-noe-surface: var(--noe-surface);
+  --color-noe-surface-2: var(--noe-surface-2);
+  --color-noe-line: var(--noe-line);
+  --color-noe-text: var(--noe-text);
+  --color-noe-muted: var(--noe-muted);
+  --color-noe-safe: var(--noe-safe);
+  --color-noe-warn: var(--noe-warn);
+  --color-noe-danger: var(--noe-danger);
+  --color-noe-urban: var(--noe-urban);
+  --color-noe-land: var(--noe-land-4);
+  --color-noe-water: var(--noe-water-3);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html { background: var(--noe-bg); color: var(--noe-text); }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--noe-bg);
+  color: var(--noe-text);
+  font-family: var(--font-urbanist), system-ui, sans-serif;
+  font-weight: 400;
 }
+.tabular { font-variant-numeric: tabular-nums; }
