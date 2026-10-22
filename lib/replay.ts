@@ -1,8 +1,8 @@
 // NOÉ runtime: replay clock + agent pipeline (watcher -> forecaster -> exposure -> voice playbook -> dispatcher/copilot).
 // Singleton on globalThis so it survives dev HMR and is shared by every route handler of this Node process.
 import type {
-  AgentName, DataMode, DoveCall, Exposure, FloodState, Forecast, Insight, Mission, NoeEvent, Observation,
-  ReplayClock, Rescuer, Resident, Site, Station, StatusReport,
+  AgentName, DataMode, DoveCall, Exposure, FloodState, Forecast, HistoricFlood, Insight, Mission, NoeEvent, Observation,
+  RainObs, RainStation, ReplayClock, Rescuer, Resident, Site, Station, StatusReport,
 } from "./types";
 import { hasDb, one, query } from "./db";
 import { emitEvent } from "./bus";
@@ -10,7 +10,7 @@ import { loadRoads, loadTerrain, type TerrainGrid } from "./terrain";
 import { runForecast, type Projection } from "./forecaster";
 import { computeExposures, floodAt } from "./exposure";
 import { draftAssignments, roadCuts, type Need } from "./dispatcher";
-import { runCopilot, templateInsights, type CopilotInput, type InsightDraft } from "./copilot";
+import { runCopilot, summarizeRain, templateInsights, type CopilotContext, type CopilotInput, type InsightDraft } from "./copilot";
 import {
   PERIMETER_CENTER, PERIMETER_RADIUS_KM, REAL_PHONE_RESIDENT, haversineM, hhmm, processSim,
   scheduleResidentOutcome, scheduleRescuers, type SimItem,
@@ -150,6 +150,7 @@ export async function control(action: "start" | "pause" | "reset" | "speed", spe
        on conflict do nothing`,
       [iso(e.simMs)],
     );
+    await copyReference(e.lastCopiedMs, e.simMs, true);
     e.lastCopiedMs = e.simMs;
     await refreshHNow(e);
     e.primed = true;
@@ -218,6 +219,8 @@ async function tick() {
         [iso(e.lastCopiedMs), iso(to)],
       );
       if (epoch !== e.epoch) return;
+      await copyReference(e.lastCopiedMs, to, false);
+      if (epoch !== e.epoch) return;
       e.lastCopiedMs = to;
       rows.sort((a, b) => a.ts.localeCompare(b.ts));
       for (const r of rows) e.hNow[r.station_code] = r.h_m;
@@ -236,6 +239,28 @@ async function tick() {
 }
 g.__noeTick = () => void tick();
 
+/** Replay Hub'Eau discharge and Météo-France rain like observations (each INSERT fires NOTIFY). Never throws. */
+async function copyReference(fromMs: number, toMs: number, prime: boolean) {
+  if (prime) fromMs = 0; // first copy: everything up to the start time
+  const range = "ts > $1 and ts <= $2";
+  try {
+    await query(
+      `insert into flows (station_code, ts, q_m3s, source)
+       select station_code, ts, q_m3s, source from flows_raw
+       where ${range} and station_code in (select code from stations) order by ts on conflict do nothing`,
+      [iso(fromMs), iso(toMs)],
+    );
+    await query(
+      `insert into rain (station_code, ts, rr1_mm)
+       select station_code, ts, rr1_mm from rain_raw
+       where ${range} and station_code in (select code from rain_stations) order by ts on conflict do nothing`,
+      [iso(fromMs), iso(toMs)],
+    );
+  } catch (err: any) {
+    console.error("[replay] reference copy failed (run db:seed?)", err?.message);
+  }
+}
+
 function simCtx(e: Engine, epoch: number) {
   return {
     simIso: () => iso(e.simMs),
@@ -253,7 +278,7 @@ async function reset(e: Engine) {
   e.running = false;
   if (hasDb()) {
     await query(
-      "truncate observations, forecasts, exposures, missions, status_reports, insights, agent_log, dove_calls restart identity cascade",
+      "truncate observations, flows, rain, forecasts, exposures, missions, status_reports, insights, agent_log, dove_calls restart identity cascade",
     );
     await query("update rescuers set available = false, lat = home_lat, lon = home_lon, updated_at = now()");
   }
@@ -289,7 +314,11 @@ async function getStations(e: Engine): Promise<Station[]> {
 }
 async function getSites(e: Engine): Promise<Site[]> {
   if (!e.cache.sites) {
-    e.cache.sites = await query<Site>("select id, kind, name, capacity, lat, lon, elevation_m, source from sites order by id");
+    e.cache.sites = await query<Site>(
+      `select id, kind, name, capacity, lat, lon, elevation_m, source,
+              category, ref, address, phone, capacity_source, official_zone, official_depth
+       from sites order by id`,
+    );
   }
   return e.cache.sites;
 }
@@ -505,6 +534,30 @@ function requestCopilot(urgent: boolean, fromTick = false) {
   void copilotCycle(e);
 }
 
+/** Public reference data at sim time (Hub'Eau discharge, Météo-France rain, Vigicrues records). Never throws. */
+async function copilotContext(simIso: string): Promise<CopilotContext | undefined> {
+  try {
+    const [flows, historicFloods, rainStations, rain] = await Promise.all([
+      query<CopilotContext["flows"][number]>(
+        `select distinct on (f.station_code) f.station_code, s.name, f.ts, f.q_m3s
+         from flows f join stations s on s.code = f.station_code
+         where f.ts <= $1 and f.q_m3s is not null order by f.station_code, f.ts desc`,
+        [simIso],
+      ),
+      query<HistoricFlood>("select station_code, label, h_m, q_m3s from historic_floods order by station_code, q_m3s desc nulls last"),
+      query<RainStation>("select code, name, lat, lon, alt_m, basin, upstream from rain_stations where basin"),
+      query<RainObs>(
+        "select station_code, ts, rr1_mm from rain where ts <= $1 and ts > $1::timestamptz - interval '6 hours' and rr1_mm is not null",
+        [simIso],
+      ),
+    ]);
+    return { flows, historicFloods, rain: summarizeRain(rainStations, rain, Date.parse(simIso)) };
+  } catch (err: any) {
+    console.error("[copilot] reference context unavailable (run db:seed?)", err?.message);
+    return undefined;
+  }
+}
+
 async function copilotCycle(e: Engine) {
   e.copilot.running = true;
   e.copilot.dirty = false;
@@ -524,6 +577,7 @@ async function copilotCycle(e: Engine) {
     const exposures = e.bestForecastId
       ? await query<Exposure>("select * from exposures where forecast_id = $1 order by priority desc", [e.bestForecastId])
       : [];
+    const context = await copilotContext(simIso);
     if (stale()) return;
     if (!e.lastForecasts.length && !statuses.some((s) => s.status === "needs_help")) return;
 
@@ -582,10 +636,18 @@ async function copilotCycle(e: Engine) {
       forecasts: [...e.lastForecasts].sort(
         (a, b) => (b.id === e.bestForecastId ? 1 : 0) - (a.id === e.bestForecastId ? 1 : 0),
       ),
-      topExposures: exposures.slice(0, 10).map((x) => ({
-        target_type: x.target_type, target_id: x.target_id, eta: x.eta, depth_m: x.depth_m, priority: x.priority, label: label(x),
-        capacity: x.target_type === "site" ? siteById.get(x.target_id)?.capacity ?? null : null,
-      })),
+      // top 10 by priority + the exposed sites taken as needs (their official data must reach the copilot)
+      topExposures: [...exposures.slice(0, 10), ...siteExp.filter((x) => !exposures.slice(0, 10).includes(x))].map((x) => {
+        const s = x.target_type === "site" ? siteById.get(x.target_id) : undefined;
+        return {
+          target_type: x.target_type, target_id: x.target_id, eta: x.eta, depth_m: x.depth_m, priority: x.priority, label: label(x),
+          capacity: s?.capacity ?? null,
+          ...(s && {
+            category: s.category ?? null, source: s.source, capacity_source: s.capacity_source ?? null,
+            official_zone: s.official_zone ?? null, official_depth: s.official_depth ?? null,
+          }),
+        };
+      }),
       openNeeds: needs,
       availableRescuers: free.map((r) => ({
         id: r.id, name: r.name, tier: r.tier, org: r.org,
@@ -595,6 +657,7 @@ async function copilotCycle(e: Engine) {
       })),
       drafts,
       roadCuts: cuts,
+      context,
     };
     await logAgent(
       "dispatcher",

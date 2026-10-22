@@ -3,19 +3,22 @@
 // Prints a timeline table plus the learner metric (ETA error per model vs. the real 2.0 m crossing).
 import fs from "node:fs";
 import path from "node:path";
+import zlib from "node:zlib";
 import { config } from "dotenv";
-import type { Observation, Rescuer, Resident, Site, Station } from "../lib/types";
+import type { FloodZoneScenario, Flow, Observation, RainObs, RainStation, Rescuer, Resident, Site, Station } from "../lib/types";
 import { runForecast, lagDiagnostics, type ForecastDraft } from "../lib/forecaster";
 import { computeExposures, floodAt, FLOOD_PARAMS, type GridLike } from "../lib/exposure";
 import { draftAssignments, roadCuts, type Need, type RoadLike } from "../lib/dispatcher";
-import { templateInsights } from "../lib/copilot";
+import { summarizeRain, templateInsights, type CopilotContext } from "../lib/copilot";
 import { haversineM, parisHHmm, parisDayHHmm } from "../lib/geo";
 
 config({ path: ".env.local" });
 const ROOT = process.cwd();
 const rd = <T>(p: string): T | null => {
   const f = path.join(ROOT, p);
-  return fs.existsSync(f) ? (JSON.parse(fs.readFileSync(f, "utf8")) as T) : null;
+  if (!fs.existsSync(f)) return null;
+  const buf = fs.readFileSync(f);
+  return JSON.parse((p.endsWith(".gz") ? zlib.gunzipSync(buf) : buf).toString("utf8")) as T;
 };
 const args = process.argv.slice(2);
 const STEP_MIN = Number(args[args.indexOf("--step") + 1]) || 15;
@@ -23,7 +26,7 @@ const START = new Date(process.env.REPLAY_START || "2026-10-19T18:00:00Z");
 const END = new Date(process.env.REPLAY_END || "2026-10-20T12:00:00Z");
 
 // ---------------------------------------------------------------- data
-const gauges = rd<{ stations: Station[]; observations: Observation[] }>("data/gauges.json");
+const gauges = rd<{ stations: Station[]; observations: Observation[]; flows?: Flow[] }>("data/gauges.json");
 if (!gauges) throw new Error("data/gauges.json missing (npm run data:gauges)");
 const stations = gauges.stations;
 const obsBy: Record<string, Observation[]> = {};
@@ -32,7 +35,14 @@ for (const k of Object.keys(obsBy)) obsBy[k].sort((a, b) => a.ts.localeCompare(b
 const target = stations.find((s) => s.role === "target")!;
 const T = target.threshold_m ?? 2.0;
 
-const sites = rd<Site[]>("data/sites.json") ?? [];
+// same site file as db:seed: official directories when fetched (npm run data:sites), else OSM
+const officialSites = rd<Site[]>("data/sites-official.json");
+const sites = officialSites ?? rd<Site[]>("data/sites.json") ?? [];
+const zonesTagged = tagOfficialZones(sites);
+const siteById = new Map(sites.map((s) => [s.id, s]));
+// public reference data for the copilot context (scripts/fetch-official.ts, fetch-rain.ts)
+const official = rd<{ stations: { code: string; historic: { label: string; h_m: number | null; q_m3s: number | null }[] }[] }>("data/official.json");
+const rain = rd<{ stations: RainStation[]; observations: RainObs[] }>("data/rain.json");
 const roads = rd<RoadLike[]>("data/roads.json") ?? [];
 const personas = rd<{ residents: Resident[]; rescuers: Rescuer[] }>("data/personas.json");
 let g = rd<GridLike>("data/terrain-grid.json");
@@ -41,8 +51,9 @@ if (!g) g = syntheticGrid();
 const residents: Resident[] = personas?.residents ?? [testResident()];
 const rescuers: Rescuer[] = (personas?.rescuers ?? testRescuers()).map((r) => ({ ...r, available: true }));
 
-console.log(`grid ${g.cols}x${g.rows}${synthetic ? " (SYNTHETIC test grid: data/terrain-grid.json not found)" : ""} · sites ${sites.length} · roads ${roads.length} · residents ${residents.length}${personas ? "" : " (test)"} · rescuers ${rescuers.length}`);
+console.log(`grid ${g.cols}x${g.rows}${synthetic ? " (SYNTHETIC test grid: data/terrain-grid.json not found)" : ""} · sites ${sites.length}${officialSites ? ` (official, ${zonesTagged} in a Géorisques zone)` : ""} · roads ${roads.length} · residents ${residents.length}${personas ? "" : " (test)"} · rescuers ${rescuers.length}`);
 console.log("FLOOD_PARAMS", JSON.stringify(FLOOD_PARAMS));
+console.log(`reference: flows ${gauges.flows?.length ?? "missing"} · historic floods ${official ? official.stations.reduce((n, x) => n + x.historic.length, 0) : "missing"} · rain values ${rain?.observations.length ?? "missing"}`);
 
 // ---------------------------------------------------------------- loop
 const until = (t: number) => {
@@ -89,13 +100,35 @@ for (let t = START.getTime(); t <= END.getTime(); t += STEP_MIN * 60_000) {
     const needs: Need[] = [{ targetType: "resident", targetId: r.id, label: r.name, lat: r.lat, lon: r.lon, priority: garcia.priority, reason: "needs_help", persona: r.persona, note: "cannot climb stairs" }];
     const label = new Map<string, string>([...sites.map((s) => [s.id, s.name] as [string, string]), ...residents.map((x) => [x.id, x.name] as [string, string])]);
     const drafts2 = draftAssignments({ simTime, g, hNow, projection, needs, rescuers, roads });
+    const context = contextAt(t);
     const ins = templateInsights({
-      simTime: simTime.toISOString(), forecasts: [best, ...drafts.filter((d) => d !== best)], topExposures: exps.slice(0, 10).map((e) => ({ ...e, label: label.get(e.target_id) ?? e.target_id })),
+      simTime: simTime.toISOString(), forecasts: [best, ...drafts.filter((d) => d !== best)],
+      // as lib/replay.ts: top 10 + up to 3 exposed sites (care homes first) that the dispatcher takes as needs
+      topExposures: [...exps.slice(0, 10), ...exps.filter((e) => e.target_type === "site" && !exps.slice(0, 10).includes(e))
+        .sort((a, b) => Number(siteById.get(a.target_id)?.kind !== "care_home") - Number(siteById.get(b.target_id)?.kind !== "care_home") || b.priority - a.priority)
+        .slice(0, 3)].map((e) => {
+        const s = e.target_type === "site" ? siteById.get(e.target_id) : undefined;
+        return {
+          ...e, label: label.get(e.target_id) ?? e.target_id,
+          ...(s && {
+            capacity: s.capacity, category: s.category ?? null, source: s.source, capacity_source: s.capacity_source ?? null,
+            official_zone: s.official_zone ?? null, official_depth: s.official_depth ?? null,
+          }),
+        };
+      }),
       openNeeds: needs, drafts: drafts2, roadCuts: cuts.slice(0, 8),
       availableRescuers: rescuers.slice(0, 10).map((x) => ({ id: x.id, name: x.name, tier: x.tier, org: x.org, distanceToNearestNeedM: x.lat !== null && x.lon !== null ? Math.round(haversineM({ lat: x.lat, lon: x.lon }, r)) : null })),
+      context,
     });
     console.log(`\n--- at ${parisDayHHmm(simTime)} (Paris): Garcia exposed, eta ${parisHHmm(garcia.eta)}; drafts:`);
     for (const d of drafts2) console.log("  ", JSON.stringify({ ...d, roadCuts: d.roadCuts.slice(0, 3) }));
+    console.log("--- copilot context:");
+    for (const f of context.flows) console.log(`   flow ${f.station_code} ${f.q_m3s} m³/s @ ${parisHHmm(f.ts)}`);
+    for (const x of context.rain) console.log(`   rain ${x.station_code} ${x.name}${x.upstream ? " (upstream)" : ""}: ${x.mm_1h} / ${x.mm_3h} / ${x.mm_6h} mm in 1 / 3 / 6 h`);
+    for (const e of exps.filter((x) => x.target_type === "site").slice(0, 5)) {
+      const s = siteById.get(e.target_id);
+      console.log(`   site ${e.target_id} ${s?.name} · zone ${s?.official_zone ?? "-"} · depth ${s?.official_depth ?? "-"} · capacity ${s?.capacity ?? "-"}`);
+    }
     console.log("--- template insights:");
     for (const i of ins) console.log(`  [${i.kind}] ${i.title}\n      ${i.detail}  (conf ${i.confidence})`);
     console.log("");
@@ -126,6 +159,46 @@ if (actual) {
   }
   const firstGood = etas.find((e) => e.t < actual! && e.best.eta_crossing && Math.abs(Date.parse(e.best.eta_crossing) - actual!) <= 30 * 60_000 && e.best.confidence >= 0.6);
   console.log(`  first best-model ETA within ±30 min with conf ≥ 60%: ${firstGood ? parisDayHHmm(firstGood.t) + " → lead time " + Math.round((actual - firstGood.t) / 60_000) + " min" : "none"}`);
+}
+
+// ---------------------------------------------------------------- copilot context (what lib/replay.ts loads from the DB)
+function contextAt(t: number): CopilotContext {
+  const latest = new Map<string, Flow>();
+  for (const f of gauges!.flows ?? []) {
+    const p = latest.get(f.station_code);
+    if (Date.parse(f.ts) <= t && (!p || Date.parse(f.ts) > Date.parse(p.ts))) latest.set(f.station_code, f);
+  }
+  const name = new Map(stations.map((s) => [s.code, s.name]));
+  return {
+    flows: [...latest.values()].map((f) => ({ station_code: f.station_code, name: name.get(f.station_code) ?? f.station_code, ts: f.ts, q_m3s: f.q_m3s })),
+    historicFloods: (official?.stations ?? []).flatMap((s) => s.historic.map((h) => ({ station_code: s.code, ...h }))),
+    rain: rain ? summarizeRain(rain.stations, rain.observations, t) : [],
+  };
+}
+
+/** Offline twin of the db:seed PostGIS step: most frequent Géorisques scenario whose polygon contains the site. */
+function tagOfficialZones(list: Site[]): number {
+  type Ring = [number, number][];
+  const z = rd<{ features: { properties: { scenario: FloodZoneScenario }; geometry: { type: string; coordinates: Ring[] | Ring[][] } }[] }>("data/flood-zones.json.gz");
+  if (!z) return 0;
+  const order: FloodZoneScenario[] = ["frequent", "medium", "extreme"];
+  const inside = (polys: Ring[][], lon: number, lat: number) => polys.some((rings) => {
+    let x = false; // even-odd over outer ring + holes
+    for (const ring of rings) for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i], [xj, yj] = ring[j];
+      if ((yi > lat) !== (yj > lat) && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) x = !x;
+    }
+    return x;
+  });
+  let n = 0;
+  for (const s of list) {
+    const hit = z.features
+      .filter((f) => inside(f.geometry.type === "Polygon" ? [f.geometry.coordinates as Ring[]] : (f.geometry.coordinates as Ring[][]), s.lon, s.lat))
+      .map((f) => f.properties.scenario);
+    s.official_zone = order.find((sc) => hit.includes(sc)) ?? null;
+    if (s.official_zone) n++;
+  }
+  return n;
 }
 
 // ---------------------------------------------------------------- test fixtures (only when real data files are missing)

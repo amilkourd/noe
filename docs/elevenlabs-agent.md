@@ -26,19 +26,27 @@ You are Noé, the flood safety assistant of the town of {{town}}.
 The river is rising. Water may reach {{name}}'s home in {{eta}}.
 Official instruction to pass on: {{instruction}}
 Rules: always speak English. Speak calmly, short sentences, one question at a time.
-Give NO safety advice other than the official instruction. Never promise an arrival time.
+The official instruction is the ONLY instruction you may give. Never add your own advice: nothing about where to sit or
+stand, doors, phones, medication, pets, equipment or going to check something. You may repeat the official instruction.
+112: say it only as "If your life is in immediate danger, call 112." Do not invent other reasons to call it.
+Never promise an arrival time, news or a call back.
 Find out: 1) are you safe right now, 2) can you go upstairs on your own,
 3) is anything making it harder (alone, health, someone else at home, water already inside).
-Judge the urgency from everything the person says and how they say it, then call the tool report_status:
+Judge the urgency from everything the person says and how they say it, then call the tool report_status with one level:
 - urgent: in danger now or cannot reach safety alone. Water inside or at the door, cannot move or climb
   the stairs, hurt, trapped, medical emergency, panicking or confused.
 - unstable: OK right now but fragile. Upstairs or dry, but alone and frail, reduced mobility, worried or
   unsure, needs medication or powered medical equipment, someone at home may need help, water very close.
 - ok: safe and calm, upstairs or on high ground, can manage on their own.
-Call report_status as soon as you have a first answer, and call it again whenever the situation changes.
-If urgent: tell them the rescue team has been notified and stay on the line.
-If life is in immediate danger, tell them to call 112.
+Call report_status as soon as you have a first answer. Call it again only when the level changes.
+What the rescue team receives: only this level. They already have the person's registered address.
+Never say you noted, wrote down, shared or passed on anything else. If the person asks you to pass on details
+(address, room, pets, health, who is at home), say kindly: "I can only send your situation level to the rescue team.
+They already have your registered address. For anything else, call 112."
+If urgent: say the rescue team has been alerted, then stay on the line.
 ```
+
+**Only the level leaves the call.** No transcript, summary or other detail is stored in NOÉ's database: one `status_reports` row per level change (`safe` / `unstable` / `needs_help`). ElevenLabs keeps its own conversation history in its dashboard, per the agent's privacy settings.
 
 Note: we send `eta` already phrased with its own "about" (e.g. `about 1 hour 20 minutes`), so the prompt says "in {{eta}}" to avoid "about about". When the model has no ETA for that home, DOVE sends `the coming hours`.
 
@@ -63,10 +71,11 @@ DOVE always overrides it (built in `lib/dove-copy.ts` → `firstMessage()`) so t
 
 ## 4. Security tab → Overrides (REQUIRED, otherwise the session is rejected)
 
-Enable the override for:
-- **First message**
+Enable the overrides for:
+- **First message** (required: DOVE always sends it)
+- **Language** (enabled on the live agent too; DOVE sends it only for non-English residents, so it is unused while `FORCE_LANG` is `"en"`)
 
-Only if you set `FORCE_LANG` back to `null` (multilingual), also enable **Language** and add `fr`, `es`, `ar`, `pt` as additional languages, then change "always speak English" in the prompt to "always answer in the person's language". DOVE sends the language override only for non-English residents.
+To go back to multilingual (`FORCE_LANG = null`), add `fr`, `es`, `ar`, `pt` as additional languages, switch the TTS model to `eleven_flash_v2_5`, and change "always speak English" in the prompt to "always answer in the person's language".
 
 No allowlist is required for the demo; if you add one, include the host serving DOVE (the Aiven Runtime URL).
 
@@ -77,19 +86,17 @@ Tools → Add tool → **Client** tool:
 | Field | Value |
 |---|---|
 | Name | `report_status` |
-| Description | `Record how urgent the resident's situation is, for the rescue team. Call it as soon as you have a first answer, and again whenever the situation changes. Judge urgency from the whole conversation.` |
+| Description | `Record the resident's status on three levels for the rescue team: urgent, unstable or ok. Call it as soon as you have a first answer, then again only when the level changes. Judge from the whole conversation.` |
 | **Wait for response** | **ON** |
 | Response timeout | 10 s |
 
-Parameters:
+Parameters (only one):
 
 | Name | Type | Required | Description |
 |---|---|---|---|
 | `urgency` | string, enum `ok` \| `unstable` \| `urgent` | yes | `urgent`: in danger now or cannot reach safety alone. `unstable`: OK right now but fragile (alone and frail, reduced mobility, worried, medical needs, water very close). `ok`: safe, calm, can manage alone. |
-| `can_climb_stairs` | boolean | no | Whether the person can go upstairs on their own. |
-| `notes` | string | no | Short English note for rescuers (e.g. "cannot climb stairs, alone, ground floor"). |
 
-The browser handler maps `urgency` to the stored status and POSTs `/api/status {residentId, status, can_climb_stairs, notes, channel: "voice"}`, then returns `"recorded"` (or a short "not recorded: ask the person to press the button on their screen"). The latest report wins, so a second call with a new urgency updates the map.
+The browser handler maps `urgency` to the stored status and POSTs `/api/status {residentId, status, channel: "voice"}` (no notes, no other field), then returns `"recorded"` (or a short "not recorded: ask the person to press the button on their screen"). It sends a level only when it differs from the last one sent during this call, so a call writes one row per level change. The latest report wins, so an escalation updates the map.
 
 | `urgency` | stored `status` | ARK map | What NOÉ does |
 |---|---|---|---|
@@ -103,7 +110,7 @@ JSON shape for the MCP / API (`conversation_config.agent.prompt.tools[]`):
 {
   "type": "client",
   "name": "report_status",
-  "description": "Record how urgent the resident's situation is, for the rescue team. Call it as soon as you have a first answer, and again whenever the situation changes. Judge urgency from the whole conversation.",
+  "description": "Record the resident's status on three levels for the rescue team: urgent, unstable or ok. Call it as soon as you have a first answer, then again only when the level changes. Judge from the whole conversation.",
   "expects_response": true,
   "response_timeout_secs": 10,
   "parameters": {
@@ -114,9 +121,7 @@ JSON shape for the MCP / API (`conversation_config.agent.prompt.tools[]`):
         "type": "string",
         "enum": ["ok", "unstable", "urgent"],
         "description": "urgent: in danger now or cannot reach safety alone. unstable: OK right now but fragile (alone and frail, reduced mobility, worried, medical needs, water very close). ok: safe, calm, can manage alone."
-      },
-      "can_climb_stairs": { "type": "boolean", "description": "Whether the person can go upstairs on their own" },
-      "notes": { "type": "string", "description": "Short English note for rescuers" }
+      }
     }
   }
 }
@@ -143,7 +148,7 @@ Pre-req: HTTPS (the Aiven Runtime URL), phone opened on `/dove/res-garcia`, tap 
 1. NOÉ inserts a `dove_calls` row (`state='ringing'`) → the phone rings → tap **Accept**.
 2. Agent: "Good evening, Mrs Garcia. This is Noé, calling for the town of Sommières. The river is rising. Go upstairs now and do not go down to the garage or basement. Are you safe right now?"
 3. Presenter: **"I can't climb the stairs."**
-4. Expected: the agent calls `report_status { urgency: "urgent", can_climb_stairs: false, notes: "cannot climb stairs" }` → DOVE shows "Your answer reached the rescue team." → ARK shows a blinking red triangle on Mrs Garcia and the copilot proposes a rescuer. The agent says the rescue team has been notified, stays on the line and gives **no arrival time**.
+4. Expected: the agent calls `report_status { urgency: "urgent" }` → DOVE shows "Your answer reached the rescue team." → ARK shows a blinking red triangle on Mrs Garcia and the copilot proposes a rescuer. The agent says the rescue team has been alerted, stays on the line, gives **no arrival time** and never claims it passed on details.
 5. Variants to try:
    - "Yes, I'm fine, I'm upstairs with my son." → `ok` → yellow dot.
    - "I'm upstairs, but I'm alone and my oxygen machine needs power." → `unstable` → blinking yellow triangle.

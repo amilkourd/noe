@@ -97,6 +97,7 @@ function DoveScreen({ residentId, demo }: { residentId: string; demo: boolean })
   const connectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const infoRef = useRef<DoveInfo | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
+  const lastVoiceStatus = useRef<ResidentStatus | null>(null); // level already sent by the agent during this call
 
   // English until /api/dove answers (DOVE is English-only for now), so a slow load never flashes another language
   const lang: DoveLang = info ? doveLang(info.resident.language) : "en";
@@ -125,11 +126,16 @@ function DoveScreen({ residentId, demo }: { residentId: string; demo: boolean })
   // ---------- ElevenLabs conversation ----------
   const conv = useConversation({
     clientTools: {
-      report_status: async (p: { urgency?: string; status?: string; can_climb_stairs?: boolean; notes?: string }) => {
-        // urgency (ok | unstable | urgent) is the agent's judgement of the whole conversation; status is the older param
+      report_status: async (p: { urgency?: string; status?: string }) => {
+        // Only the 3-level status leaves the call (urgency ok | unstable | urgent; status is the older param):
+        // nothing else from the conversation is stored, and a repeat of the same level is not re-sent.
         const u = p?.urgency ?? p?.status;
         const status: ResidentStatus = u === "ok" || u === "safe" ? "safe" : u === "unstable" ? "unstable" : "needs_help";
-        const ok = await postStatus(status, typeof p?.can_climb_stairs === "boolean" ? p.can_climb_stairs : null, p?.notes ?? null, "voice");
+        if (status === lastVoiceStatus.current) return "recorded";
+        const prev = lastVoiceStatus.current;
+        lastVoiceStatus.current = status; // claim before awaiting, so a quick repeat cannot slip through
+        const ok = await postStatus(status, null, null, "voice");
+        if (!ok && lastVoiceStatus.current === status) lastVoiceStatus.current = prev; // allow a retry
         return ok ? "recorded" : "not recorded: ask the person to press the button on their screen";
       },
     },
@@ -299,6 +305,7 @@ function DoveScreen({ residentId, demo }: { residentId: string; demo: boolean })
     setHadCall(true);
     setBubbles([]);
     setReported(null);
+    lastVoiceStatus.current = null;
     setSendState("idle");
     setCallStart(Date.now());
     setElapsed(0);
@@ -350,7 +357,10 @@ function DoveScreen({ residentId, demo }: { residentId: string; demo: boolean })
   };
 
   const pressStatus = async (status: ResidentStatus) => {
+    const prev = lastVoiceStatus.current;
+    lastVoiceStatus.current = status; // the agent repeating this level must not add a second row
     const ok = await postStatus(status, null, null, "button");
+    if (!ok && lastVoiceStatus.current === status) lastVoiceStatus.current = prev;
     if (ok && voiceRef.current === "live") {
       try {
         conv.sendContextualUpdate(

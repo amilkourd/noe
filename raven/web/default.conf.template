@@ -1,0 +1,19 @@
+# RAVEN web: static Expo export + /api proxied to the NOÉ backend (same origin, so no CORS).
+server {
+  listen ${PORT};
+  root /usr/share/nginx/html;
+
+  location /api/ {
+    proxy_pass ${NOE_API};
+    proxy_ssl_server_name on;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_buffering off;
+    proxy_read_timeout 1h;
+  }
+
+  location / {
+    try_files $uri $uri/ /index.html;
+    add_header Cache-Control "no-cache";
+  }
+}

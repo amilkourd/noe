@@ -1,6 +1,7 @@
 // Snapshot builder for GET /api/state (everything a surface needs on load / reconnect).
 import type {
-  AgentLog, DoveCall, Exposure, Forecast, Insight, Mission, NoeState, Observation, Rescuer, Resident, Site, Station, StatusReport,
+  AgentLog, Commune, DataSource, DoveCall, Exposure, Flow, Forecast, HistoricFlood, Insight, Mission, NoeState, Observation,
+  RainObs, RainStation, Rescuer, Resident, Site, Station, StatusReport, Vigilance,
 } from "./types";
 import { one, query } from "./db";
 import { PERIMETER, getClock, getFlood, getRuntime, isPerimeterActive } from "./replay";
@@ -25,8 +26,8 @@ export async function buildState(): Promise<NoeState> {
       query<Observation>("select station_code, ts, h_m, source from observations where ts <= $1 order by station_code, ts", [clock.simTime]),
       query<Forecast>("select * from forecasts order by id desc limit 12"),
       latestBestForecast(),
-      query<Site>("select id, kind, name, capacity, lat, lon, elevation_m, source from sites order by id"),
-      query<Resident>("select id, name, age, language, mobility, floor, address, lat, lon, elevation_m, persona from residents order by id"),
+      query<Site>("select id, kind, name, capacity, lat, lon, elevation_m, source, category, ref, address, phone, capacity_source, official_zone, official_depth from sites order by id"),
+      query<Resident>("select id, name, age, language, mobility, floor, address, lat, lon, elevation_m, persona, official_zone from residents order by id"),
       query<Rescuer>("select * from rescuers order by id"),
       query<Mission>("select * from missions order by id"),
       query<StatusReport>("select distinct on (resident_id) * from status_reports order by resident_id, created_at desc, id desc"),
@@ -38,6 +39,16 @@ export async function buildState(): Promise<NoeState> {
   const exposures = latestForecast
     ? await query<Exposure>("select * from exposures where forecast_id = $1 order by priority desc", [latestForecast.id])
     : [];
+  // public reference data (tables exist after db:seed with this schema; empty lists otherwise)
+  const safe = <T>(p: Promise<T[]>) => p.catch(() => [] as T[]);
+  const [flows, rain, rainStations, historicFloods, vigilance, communes] = await Promise.all([
+    safe(query<Flow>("select station_code, ts, q_m3s, source from flows where ts <= $1 order by station_code, ts", [clock.simTime])),
+    safe(query<RainObs>("select station_code, ts, rr1_mm from rain where ts <= $1 order by station_code, ts", [clock.simTime])),
+    safe(query<RainStation>("select code, name, lat, lon, alt_m, basin, upstream from rain_stations order by lat desc")),
+    safe(query<HistoricFlood>("select station_code, label, h_m, q_m3s from historic_floods order by station_code, h_m desc nulls last")),
+    safe(query<Vigilance>("select code, name, level, label, fetched_at from vigilance")),
+    safe(query<Commune>("select code, name, population, lat, lon, flood_disasters, last_flood_disaster::text from communes order by population desc nulls last")),
+  ]);
   return {
     clock,
     stations,
@@ -55,8 +66,26 @@ export async function buildState(): Promise<NoeState> {
     logs: logsDesc.reverse(), // oldest -> newest
     doveCalls,
     perimeter: { active: perimeterActive, center: PERIMETER.center, radiusKm: PERIMETER.radiusKm },
+    flows,
+    rain,
+    rainStations,
+    official: { historicFloods, vigilance: vigilance[0] ?? null, communes, sources: DATA_SOURCES },
   };
 }
+
+/** Public sources behind NOÉ's data (all Licence Ouverte 2.0 unless noted). */
+export const DATA_SOURCES: DataSource[] = [
+  { id: "hubeau", name: "Hub'Eau Hydrométrie (water height + discharge)", url: "https://hubeau.eaufrance.fr", licence: "Licence Ouverte 2.0", usedFor: "gauges, replay" },
+  { id: "vigicrues", name: "Vigicrues (historic floods, vigilance)", url: "https://www.vigicrues.gouv.fr", licence: "Licence Ouverte 2.0", usedFor: "historic comparison, vigilance snapshot" },
+  { id: "meteofrance", name: "Météo-France hourly station data", url: "https://meteo.data.gouv.fr", licence: "Licence Ouverte 2.0", usedFor: "rain replay" },
+  { id: "georisques", name: "Géorisques (TRI flood zones, CatNat)", url: "https://www.georisques.gouv.fr", licence: "Licence Ouverte 2.0", usedFor: "official flood zones, depth classes, disaster history" },
+  { id: "education", name: "Annuaire de l'éducation + effectifs", url: "https://data.education.gouv.fr", licence: "Licence Ouverte 2.0", usedFor: "schools and pupil counts" },
+  { id: "finess", name: "FINESS (health and care establishments)", url: "https://public.opendatasoft.com/explore/dataset/healthref-france-finess", licence: "Licence Ouverte 2.0", usedFor: "care homes, hospitals" },
+  { id: "ign", name: "IGN Géoplateforme altimetry (RGE ALTI)", url: "https://data.geopf.fr", licence: "Licence Ouverte 2.0", usedFor: "site and persona elevations" },
+  { id: "geoapi", name: "geo.api.gouv.fr communes", url: "https://geo.api.gouv.fr", licence: "Licence Ouverte 2.0", usedFor: "communes, population" },
+  { id: "osm", name: "OpenStreetMap (Overpass)", url: "https://www.openstreetmap.org", licence: "ODbL", usedFor: "river, roads, campsites" },
+  { id: "terrain", name: "AWS Terrain Tiles", url: "https://registry.opendata.aws/terrain-tiles/", licence: "various open", usedFor: "flood model elevation grid" },
+];
 
 // ---------------------------------------------------------------- route helpers
 import type { z } from "zod";

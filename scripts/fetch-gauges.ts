@@ -1,9 +1,9 @@
-// Normalise raw Hub'Eau v2 observations (data/raw/obs_<code>.json + stations.json) into data/gauges.json.
+// Normalise raw Hub'Eau v2 observations (data/raw/obs_<code>.json height, obsq_<code>.json discharge, stations.json) into data/gauges.json.
 // --refresh refetches observations_tr from Hub'Eau (with retries) before normalising. Never required.
 // Run: npx tsx scripts/fetch-gauges.ts [--refresh]
 import fs from "node:fs";
 import path from "node:path";
-import type { Observation, Station, StationRole } from "../lib/types";
+import type { Flow, Observation, Station, StationRole } from "../lib/types";
 
 const ROOT = path.resolve(__dirname, "..");
 const RAW = path.join(ROOT, "data/raw");
@@ -41,10 +41,22 @@ async function refresh() {
   }
 }
 
+// Discharge (Q, L/s in Hub'Eau) for the same gauges: fetched once if missing (or with --refresh).
+async function fetchFlows(force: boolean) {
+  for (const g of GAUGES) {
+    const file = path.join(RAW, `obsq_${g.code}.json`);
+    if (!force && fs.existsSync(file)) continue;
+    const url = `https://hubeau.eaufrance.fr/api/v2/hydrometrie/observations_tr?code_entite=${g.code}&grandeur_hydro=Q&date_debut_obs=2026-10-18T00:00:00Z&size=20000&format=json`;
+    fs.writeFileSync(file, JSON.stringify(await fetchWithRetry(url)));
+    console.log(`[gauges] fetched discharge ${g.code}`);
+  }
+}
+
 async function main() {
   if (process.argv.includes("--refresh")) {
     try { await refresh(); } catch (e) { console.warn("[gauges] refresh failed, using cached raw files:", (e as Error).message); }
   }
+  try { await fetchFlows(process.argv.includes("--refresh")); } catch (e) { console.warn("[gauges] discharge fetch failed:", (e as Error).message); }
   const rawStations = fs.existsSync(path.join(RAW, "stations.json"))
     ? (JSON.parse(fs.readFileSync(path.join(RAW, "stations.json"), "utf8")).data as Record<string, unknown>[])
     : [];
@@ -78,8 +90,22 @@ async function main() {
     console.log(`[gauges] ${g.code} ${g.role.padEnd(10)} ${rows.length} obs ${rows[0]?.[0]} .. ${rows[rows.length - 1]?.[0]} peak ${peak?.[1]} m at ${peak?.[0]}`);
   }
   observations.sort((a, b) => a.ts.localeCompare(b.ts) || a.station_code.localeCompare(b.station_code));
-  fs.writeFileSync(path.join(ROOT, "data/gauges.json"), JSON.stringify({ stations, observations }));
-  console.log(`[gauges] wrote data/gauges.json: ${stations.length} stations, ${observations.length} observations`);
+
+  const flows: Flow[] = [];
+  for (const g of GAUGES) {
+    const file = path.join(RAW, `obsq_${g.code}.json`);
+    if (!fs.existsSync(file)) continue;
+    const data = JSON.parse(fs.readFileSync(file, "utf8")).data as { date_obs: string; resultat_obs: number | null }[];
+    const byTs = new Map<string, number>();
+    for (const d of data) if (d.resultat_obs != null && d.date_obs) byTs.set(new Date(d.date_obs).toISOString(), +(d.resultat_obs / 1000).toFixed(2));
+    const rows = [...byTs.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    for (const [ts, q] of rows) flows.push({ station_code: g.code, ts, q_m3s: q, source: "hubeau" });
+    const peak = rows.reduce((m, r) => (r[1] > m[1] ? r : m), rows[0]);
+    console.log(`[gauges] ${g.code} discharge ${rows.length} obs, peak ${peak?.[1]} m³/s at ${peak?.[0]}`);
+  }
+  flows.sort((a, b) => a.ts.localeCompare(b.ts) || a.station_code.localeCompare(b.station_code));
+  fs.writeFileSync(path.join(ROOT, "data/gauges.json"), JSON.stringify({ stations, observations, flows }));
+  console.log(`[gauges] wrote data/gauges.json: ${stations.length} stations, ${observations.length} observations, ${flows.length} discharge values`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

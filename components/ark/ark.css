@@ -1,0 +1,228 @@
+/* ARK command console: glass surfaces over a full-bleed map. Plain CSS (unlayered) so it wins over HeroUI defaults. */
+
+.ark {
+  --ark-glass: linear-gradient(180deg, rgba(30, 33, 38, 0.80), rgba(13, 14, 16, 0.76));
+  --ark-glass-border: rgba(255, 255, 255, 0.09);
+  --ark-tile: rgba(255, 255, 255, 0.035);
+  --ark-tile-border: rgba(255, 255, 255, 0.06);
+  --ark-pill: rgba(255, 255, 255, 0.07);
+  --ark-pill-border: rgba(255, 255, 255, 0.13);
+  --ark-caution: #FFD23F;   /* unstable + safe (yellow, per DOVE urgency spec) */
+  --ark-danger: var(--noe-danger);
+  /* HeroUI tokens -> glass (Buttons, Tabs, ToggleButtons pick these up) */
+  --default: rgba(255, 255, 255, 0.07);
+  --default-hover: rgba(255, 255, 255, 0.12);
+  --default-foreground: #F3F5F6;
+  --segment: rgba(255, 255, 255, 0.15);
+  --segment-foreground: #ffffff;
+  --accent: #F3F5F6;
+  --accent-hover: #ffffff;
+  --accent-foreground: #0E0F11;
+  --accent-soft: rgba(255, 255, 255, 0.16);
+  --accent-soft-hover: rgba(255, 255, 255, 0.22);
+  --accent-soft-foreground: #ffffff;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--noe-bg);
+  color: var(--noe-text);
+}
+
+/* top and bottom fall-off so the floating chrome sits on darker ground, like the references */
+.ark-vignette {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 6, 8, 0.62) 0%, transparent 22%, transparent 58%, rgba(5, 6, 8, 0.78) 100%),
+    radial-gradient(130% 100% at 50% 40%, transparent 60%, rgba(5, 6, 8, 0.45) 100%);
+}
+
+/* small caps label, as in "TASK STATUS" */
+.ark-cap { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(243, 245, 246, 0.6); }
+
+/* bottom cards */
+.ark-card { display: flex; flex-direction: column; height: 164px; padding: 16px 18px; border-radius: 24px; }
+
+/* white action pill under the map card ("Cost to date") */
+.ark-white-pill {
+  min-height: 48px;
+  padding: 6px 8px 6px 18px;
+  border-radius: 999px;
+  background: #F6F7F8;
+  color: #0E0F11;
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.7), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+button.ark-white-pill { padding-right: 16px; cursor: pointer; }
+button.ark-white-pill:hover { background: #ffffff; }
+
+/* 2x2 action grid buttons ("Measure / Locate / Print / Edit") */
+.ark .button.ark-grid-btn {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.07));
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 6px 16px -10px rgba(0, 0, 0, 0.8);
+  font-size: 14px;
+}
+.ark .button.ark-grid-btn.is-active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.18));
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+/* top nav: plain text tabs, the active one becomes a glass pill */
+.ark .ark-nav .tabs__list-container { background: transparent; border: 0; }
+.ark .ark-nav .tabs__tab { color: rgba(243, 245, 246, 0.55); font-size: 13px; padding-inline: 16px; height: 40px; }
+.ark .ark-nav .tabs__tab:hover { color: #fff; }
+.ark .ark-nav .tabs__indicator {
+  background: rgba(30, 33, 38, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 10px 30px -12px rgba(0, 0, 0, 0.8);
+}
+
+.ark-glass {
+  background: var(--ark-glass);
+  backdrop-filter: blur(32px) saturate(150%);
+  -webkit-backdrop-filter: blur(32px) saturate(150%);
+  border: 1px solid var(--ark-glass-border);
+  border-radius: 26px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 30px 60px -30px rgba(0, 0, 0, 0.75);
+}
+
+.ark-tile {
+  background: var(--ark-tile);
+  border: 1px solid var(--ark-tile-border);
+  border-radius: 18px;
+}
+
+.ark-label { font-size: 11px; letter-spacing: 0.02em; color: var(--noe-muted); }
+.ark-big { font-weight: 300; letter-spacing: -0.02em; line-height: 1; }
+.ark-dim { opacity: 0.38; }
+
+/* ---- glass pills: HeroUI Buttons / chips restyled */
+.ark .ark-pill,
+.ark .button.ark-pill {
+  background: var(--ark-pill);
+  border: 1px solid var(--ark-pill-border);
+  color: var(--noe-text);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  font-weight: 400;
+}
+.ark .button.ark-pill:hover { background: rgba(255, 255, 255, 0.12); }
+/* pills floating directly on the map need a darker base to stay legible over bright imagery */
+.ark .ark-float,
+.ark .button.ark-pill.ark-float { background: rgba(16, 18, 21, 0.66); }
+.ark .button.ark-pill.ark-float:hover { background: rgba(40, 44, 50, 0.8); }
+.ark .button.ark-pill.ark-float.is-active { background: rgba(243, 245, 246, 0.92); color: #0E0F11; }
+.ark .button.ark-pill[data-selected="true"],
+.ark .ark-pill.is-active {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.ark .button.ark-solid {
+  background: #F3F5F6;
+  color: #0E0F11;
+  border-radius: 999px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px -10px rgba(255, 255, 255, 0.45);
+}
+.ark .button.ark-solid:hover { background: #ffffff; }
+.ark .button.ark-round {
+  width: 40px; height: 40px; min-width: 40px; padding: 0;
+  border-radius: 999px;
+}
+
+/* ---- HeroUI Tabs / toggles inside glass */
+.ark .tabs__list-container { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.07); }
+.ark .tabs__tab { color: var(--noe-muted); font-weight: 400; }
+.ark .tabs__tab[data-selected="true"] { color: #fff; }
+.ark .tabs__indicator { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16); }
+.ark .toggle-button { font-weight: 400; }
+
+/* ---- scrolling lists */
+.ark-scroll { overflow-y: auto; scrollbar-width: none; }
+.ark-scroll::-webkit-scrollbar { display: none; }
+
+/* ---- status glyphs (lists) */
+.ark-tri { display: inline-block; width: 12px; height: 11px; flex: none; }
+.ark-tri path { fill: currentColor; }
+.ark-dot { display: inline-block; width: 8px; height: 8px; border-radius: 999px; background: currentColor; flex: none; }
+
+/* ---- map markers */
+.ark-pin { position: relative; display: grid; place-items: center; cursor: pointer; }
+.ark-pin svg { overflow: visible; }
+.ark-pin path { stroke: rgba(0, 0, 0, 0.55); stroke-width: 1.2; stroke-linejoin: round; }
+.ark-pin--needs_help { color: var(--ark-danger); }
+.ark-pin--needs_help path { fill: var(--ark-danger); filter: drop-shadow(0 0 6px rgba(255, 90, 95, 0.9)); }
+.ark-pin--unstable { color: var(--ark-caution); }
+.ark-pin--unstable path { fill: var(--ark-caution); filter: drop-shadow(0 0 6px rgba(255, 210, 63, 0.75)); }
+.ark-pin--needs_help svg, .ark-pin--unstable svg { animation: ark-blink 1s ease-in-out infinite; }
+
+.ark-pin i { display: block; border-radius: 999px; }
+/* safe: plain yellow dot, static */
+.ark-pin--safe i { width: 9px; height: 9px; background: var(--ark-caution); box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.45); }
+/* no report yet: neutral white family, clearly not yellow */
+.ark-pin--not_called i { width: 5px; height: 5px; background: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4); }
+.ark-pin--no_answer i { width: 10px; height: 10px; border: 1.5px solid rgba(255, 255, 255, 0.85); background: rgba(0, 0, 0, 0.35); }
+.ark-pin--calling i {
+  width: 10px; height: 10px; background: #ffffff;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  animation: ark-ring 1.4s ease-out infinite;
+}
+.ark-pin.is-selected::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.85); transform: translate(-50%, -50%);
+}
+/* triangles: the marker anchor is the centre, so lift the glyph until its base sits on the point */
+.ark-pin--needs_help svg, .ark-pin--unstable svg { transform: translateY(-45%); }
+
+.ark-rescuer {
+  display: grid; place-items: center;
+  width: 26px; height: 26px; border-radius: 999px;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.02em;
+  color: #0E0F11; background: #F3F5F6;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18), 0 6px 16px -4px rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+}
+.ark-rescuer.is-off { background: rgba(20, 22, 25, 0.85); color: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25); }
+.ark-rescuer.is-busy { box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.45), 0 0 18px rgba(125, 211, 252, 0.6); }
+.ark-rescuer.is-selected { outline: 1px dashed rgba(255, 255, 255, 0.9); outline-offset: 5px; }
+
+.ark-gauge {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 5px 10px; border-radius: 999px;
+  background: rgba(14, 15, 17, 0.62); border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  font-size: 11px; white-space: nowrap; cursor: pointer;
+}
+.ark-gauge b { font-weight: 500; }
+.ark-gauge em { font-style: normal; color: #BAE6FD; }
+.ark-gauge.is-target { border-color: rgba(186, 230, 253, 0.45); box-shadow: 0 0 20px -4px rgba(125, 211, 252, 0.55); }
+
+/* ---- keyframes */
+@keyframes ark-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.22; } }
+@keyframes ark-ring {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  100% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+}
+.ark-blink { animation: ark-blink 1s ease-in-out infinite; }
+.ark-live { animation: ark-ring 1.8s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ark-pin--needs_help svg, .ark-pin--unstable svg, .ark-pin--calling i, .ark-blink, .ark-live { animation: none; }
+}
+
+/* ---- MapLibre chrome */
+.ark .maplibregl-ctrl-attrib {
+  background: rgba(14, 15, 17, 0.6) !important;
+  color: var(--noe-muted);
+  border-radius: 999px;
+  font-size: 10px;
+  backdrop-filter: blur(10px);
+}
+.ark .maplibregl-ctrl-attrib a { color: var(--noe-muted); }
+.ark .maplibregl-ctrl-attrib-button { filter: invert(1); opacity: 0.6; }
+.ark .maplibregl-ctrl-bottom-right { right: 392px; bottom: 6px; }

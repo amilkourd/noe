@@ -2,12 +2,16 @@
 //   npx tsx scripts/seed.ts --personas   regenerate data/personas.json (deterministic) and exit
 //   npx tsx scripts/seed.ts --dry-run    print counts + samples, no DB
 //   npx tsx scripts/seed.ts              apply db/schema.sql (drops everything!) then insert stations,
-//                                        observations_raw (all), sites, residents, rescuers
+//                                        observations_raw (all), sites, residents, rescuers, and the public
+//                                        reference data when its file exists (flows, rain, Vigicrues, Géorisques,
+//                                        communes, INSEE grid, BAN addresses); PostGIS then tags sites/residents
+//                                        with the official flood zone they stand in.
 import fs from "node:fs";
 import path from "node:path";
+import zlib from "node:zlib";
 import { config } from "dotenv";
 import { Client } from "pg";
-import type { Mobility, Observation, Rescuer, Resident, Site, Station, Tier } from "../lib/types";
+import type { Flow, Mobility, Observation, RainObs, RainStation, Rescuer, Resident, Site, Station, Tier } from "../lib/types";
 import { cellCenter, cellOf, type TerrainGrid } from "../lib/terrain";
 
 const ROOT = path.resolve(__dirname, "..");
@@ -15,6 +19,47 @@ config({ path: path.join(ROOT, ".env.local") });
 config({ path: path.join(ROOT, ".env") });
 
 const readJson = <T>(f: string): T => JSON.parse(fs.readFileSync(path.join(ROOT, f), "utf8")) as T;
+/** Optional data file (plain or .gz): null when the fetch script has not been run. */
+const readOptional = <T>(f: string): T | null => {
+  const file = path.join(ROOT, f);
+  if (!fs.existsSync(file)) return null;
+  const buf = fs.readFileSync(file);
+  return JSON.parse((f.endsWith(".gz") ? zlib.gunzipSync(buf) : buf).toString("utf8")) as T;
+};
+
+// public reference data written by scripts/fetch-official.ts, fetch-rain.ts, fetch-population.ts
+interface OfficialFile {
+  stations: { code: string; historic: { label: string; h_m: number | null; q_m3s: number | null }[] }[];
+  vigilance: { code: string; name: string; level: number; label: string; fetchedAt: string; geometry: unknown } | null;
+  communes: { code: string; name: string; population: number | null; lat: number; lon: number; flood_disasters: number; last_flood_disaster: string | null; vidourle_atlas: boolean; azi: string[]; tri: string[] }[];
+  disasters: { code: string; commune_code: string; start_date: string | null; end_date: string | null; published: string | null; label: string }[];
+}
+interface ZonesFile { features: { properties: { id: string; scenario: string; river: string; tri: string }; geometry: unknown }[] }
+interface PopulationFile { cells: { id: string; lon: number; lat: number; ring: [number, number][]; ind: number; men: number; men_1ind: number; ind_0_3: number; ind_65_79: number; ind_80p: number }[] }
+interface AddressesFile { addresses: [string, number, number, string, string, string, string][] }
+interface Reference {
+  flows: Flow[]; official: OfficialFile | null; zones: ZonesFile | null; rain: { stations: RainStation[]; observations: RainObs[] } | null;
+  population: PopulationFile | null; addresses: AddressesFile | null;
+}
+
+function loadReference(gauges: { flows?: Flow[] }): Reference {
+  return {
+    flows: gauges.flows ?? [],
+    official: readOptional<OfficialFile>("data/official.json"),
+    zones: readOptional<ZonesFile>("data/flood-zones.json.gz"),
+    rain: readOptional<Reference["rain"]>("data/rain.json"),
+    population: readOptional<PopulationFile>("data/population.json"),
+    addresses: readOptional<AddressesFile>("data/addresses.json.gz"),
+  };
+}
+
+function reportReference(r: Reference) {
+  const n = (x: unknown[] | undefined | null) => x?.length ?? "missing";
+  console.log(`[seed] reference: flows ${n(r.flows)}, historic floods ${r.official ? r.official.stations.reduce((s, x) => s + x.historic.length, 0) : "missing"}, ` +
+    `vigilance ${r.official?.vigilance ? r.official.vigilance.label : "missing"}, flood zones ${n(r.zones?.features)}, communes ${n(r.official?.communes)}, ` +
+    `disasters ${n(r.official?.disasters)}, rain stations ${n(r.rain?.stations)}, rain values ${n(r.rain?.observations)}, ` +
+    `population cells ${n(r.population?.cells)}, addresses ${n(r.addresses?.addresses)}`);
+}
 
 // ---------- deterministic RNG ----------
 function mulberry32(seed: number) {
@@ -199,14 +244,22 @@ function report(g: TerrainGrid, sites: Site[], p: Personas, gauges: { stations: 
 async function main() {
   const args = process.argv.slice(2);
   const g = readJson<TerrainGrid>("data/terrain-grid.json");
-  const gauges = readJson<{ stations: Station[]; observations: Observation[] }>("data/gauges.json");
-  const sites = readJson<Site[]>("data/sites.json").map((s) => {
+  const gauges = readJson<{ stations: Station[]; observations: Observation[]; flows?: Flow[] }>("data/gauges.json");
+  // official sites (scripts/fetch-official-sites.ts) when available, else the OSM ones; IGN elevation, else the grid
+  const siteFile = fs.existsSync(path.join(ROOT, "data/sites-official.json")) ? "data/sites-official.json" : "data/sites.json";
+  const sites = readJson<Site[]>(siteFile).map((s) => {
     const i = cellOf(g, s.lat, s.lon);
-    return { ...s, elevation_m: i >= 0 ? g.elev[i] : null };
+    return { ...s, elevation_m: s.elevation_m ?? (i >= 0 ? g.elev[i] : null) };
   });
+  console.log(`[seed] sites from ${siteFile}`);
   const p = loadPersonas(g, args.includes("--personas"));
   report(g, sites, p, gauges);
-  if (args.includes("--personas") || args.includes("--dry-run")) return;
+  if (args.includes("--personas")) return;
+  const ign = readOptional<{ residents: Record<string, number> }>("data/elevations-ign.json");
+  if (ign) p.residents = p.residents.map((r) => ({ ...r, elevation_m: ign.residents[r.id] ?? r.elevation_m }));
+  const ref = loadReference(gauges);
+  reportReference(ref);
+  if (args.includes("--dry-run")) return;
 
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL missing (.env.local)");
@@ -220,26 +273,82 @@ async function main() {
     console.log("[seed] applying db/schema.sql");
     await client.query(fs.readFileSync(path.join(ROOT, "db/schema.sql"), "utf8"));
 
-    async function insert(table: string, cols: string[], rows: unknown[][], batch = 400) {
+    // expr: SQL around a column's parameter ("?" is replaced by $n), e.g. for GeoJSON -> PostGIS geography
+    async function insert(table: string, cols: string[], rows: unknown[][], batch = 400, expr: Record<string, string> = {}) {
       for (let k = 0; k < rows.length; k += batch) {
         const chunk = rows.slice(k, k + batch);
         const params: unknown[] = [];
-        const values = chunk.map((r) => `(${r.map((v) => { params.push(v); return `$${params.length}`; }).join(",")})`).join(",");
+        const values = chunk.map((r) => `(${r.map((v, j) => {
+          params.push(v);
+          const ph = `$${params.length}`;
+          return expr[cols[j]] ? expr[cols[j]].replace("?", ph) : ph;
+        }).join(",")})`).join(",");
         await client.query(`insert into ${table} (${cols.join(",")}) values ${values} on conflict do nothing`, params);
       }
       console.log(`[seed] ${table}: ${rows.length}`);
     }
+    const GEO = (kind: "multi" | "plain") => kind === "multi"
+      ? "st_multi(st_collectionextract(st_makevalid(st_setsrid(st_geomfromgeojson(?),4326)),3))::geography"
+      : "st_setsrid(st_geomfromgeojson(?),4326)::geography";
     await client.query("begin");
     await insert("stations", ["code", "name", "river", "role", "lat", "lon", "threshold_m", "threshold_label"],
       gauges.stations.map((s) => [s.code, s.name, s.river, s.role, s.lat, s.lon, s.threshold_m, s.threshold_label]));
     await insert("observations_raw", ["station_code", "ts", "h_m", "source"],
       gauges.observations.map((o) => [o.station_code, o.ts, o.h_m, o.source]));
-    await insert("sites", ["id", "kind", "name", "capacity", "lat", "lon", "elevation_m", "source"],
-      sites.map((s) => [s.id, s.kind, s.name, s.capacity, s.lat, s.lon, s.elevation_m, s.source]));
+    await insert("sites", ["id", "kind", "name", "capacity", "lat", "lon", "elevation_m", "source", "category", "ref", "address", "phone", "capacity_source", "official_depth"],
+      sites.map((s) => [s.id, s.kind, s.name, s.capacity, s.lat, s.lon, s.elevation_m, s.source, s.category ?? null, s.ref ?? null,
+        s.address ?? null, s.phone ?? null, s.capacity_source ?? null, s.official_depth ?? null]));
     await insert("residents", ["id", "name", "age", "language", "mobility", "floor", "address", "lat", "lon", "elevation_m", "persona"],
       p.residents.map((r) => [r.id, r.name, r.age, r.language, r.mobility, r.floor, r.address, r.lat, r.lon, r.elevation_m, r.persona]));
     await insert("rescuers", ["id", "name", "org", "country", "tier", "available", "lat", "lon", "home_lat", "home_lon", "persona"],
       p.rescuers.map((r) => [r.id, r.name, r.org, r.country, r.tier, r.available, r.lat, r.lon, r.home_lat, r.home_lon, r.persona]));
+
+    // ---- public reference data
+    await insert("flows_raw", ["station_code", "ts", "q_m3s", "source"], ref.flows.map((f) => [f.station_code, f.ts, f.q_m3s, f.source]));
+    if (ref.official) {
+      const o = ref.official;
+      await insert("historic_floods", ["station_code", "label", "h_m", "q_m3s"],
+        o.stations.flatMap((s) => s.historic.map((h) => [s.code, h.label, h.h_m, h.q_m3s])));
+      if (o.vigilance) {
+        await insert("vigilance", ["code", "name", "level", "label", "fetched_at", "geom"],
+          [[o.vigilance.code, o.vigilance.name, o.vigilance.level, o.vigilance.label, o.vigilance.fetchedAt, JSON.stringify(o.vigilance.geometry)]],
+          1, { geom: "st_multi(st_setsrid(st_geomfromgeojson(?),4326))::geography" });
+      }
+      await insert("communes", ["code", "name", "population", "lat", "lon", "flood_disasters", "last_flood_disaster", "vidourle_atlas", "azi", "tri"],
+        o.communes.map((c) => [c.code, c.name, c.population, c.lat, c.lon, c.flood_disasters, c.last_flood_disaster, c.vidourle_atlas, c.azi, c.tri]));
+      await insert("disasters", ["code", "commune_code", "start_date", "end_date", "published", "label"],
+        o.disasters.map((d) => [d.code, d.commune_code, d.start_date, d.end_date, d.published, d.label]));
+    }
+    if (ref.zones) {
+      await insert("flood_zones", ["id", "scenario", "river", "tri", "geom"],
+        ref.zones.features.map((f) => [f.properties.id, f.properties.scenario, f.properties.river, f.properties.tri, JSON.stringify(f.geometry)]),
+        50, { geom: GEO("multi") });
+    }
+    if (ref.rain) {
+      await insert("rain_stations", ["code", "name", "lat", "lon", "alt_m", "basin", "upstream"],
+        ref.rain.stations.map((s) => [s.code, s.name, s.lat, s.lon, s.alt_m, s.basin, s.upstream]));
+      await insert("rain_raw", ["station_code", "ts", "rr1_mm"], ref.rain.observations.map((r) => [r.station_code, r.ts, r.rr1_mm]));
+    }
+    if (ref.population) {
+      await insert("population_cells", ["id", "ind", "men", "men_1ind", "ind_0_3", "ind_65_79", "ind_80p", "geom", "centre"],
+        ref.population.cells.map((c) => [c.id, c.ind, c.men, c.men_1ind, c.ind_0_3, c.ind_65_79, c.ind_80p,
+          JSON.stringify({ type: "Polygon", coordinates: [c.ring] }), JSON.stringify({ type: "Point", coordinates: [c.lon, c.lat] })]),
+        300, { geom: GEO("plain"), centre: GEO("plain") });
+    }
+    if (ref.addresses) {
+      await insert("addresses", ["id", "lon", "lat", "label", "postcode", "insee", "commune"], ref.addresses.addresses, 1000);
+    }
+    // PostGIS: tag every site / resident with the most frequent official scenario it stands in
+    for (const t of ["sites", "residents"]) {
+      const r = await client.query(
+        `update ${t} x set official_zone = (
+           select z.scenario from flood_zones z where st_intersects(z.geom, x.geom)
+           order by case z.scenario when 'frequent' then 1 when 'medium' then 2 else 3 end limit 1)`,
+      );
+      const z = await client.query<{ official_zone: string | null; n: number }>(
+        `select official_zone, count(*)::int as n from ${t} group by official_zone order by official_zone nulls last`);
+      console.log(`[seed] ${t} official zones (${r.rowCount} rows): ${z.rows.map((x) => `${x.official_zone ?? "none"} ${x.n}`).join(", ")}`);
+    }
     await client.query("commit");
     console.log("[seed] done");
   } catch (e) {

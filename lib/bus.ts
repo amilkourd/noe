@@ -32,7 +32,7 @@ export async function ensureListener(): Promise<void> {
   if (g.__noeListening) return;
   if (!hasDb()) return; // no credentials yet: in-memory events still flow
   g.__noeListening = true;
-  const c = new Client(pgConfig());
+  const c = new Client({ ...pgConfig(), keepAlive: true }); // keepAlive: notice dead sockets, then reconnect
   g.__noeListenClient = c;
   const drop = (why: string) => {
     if (g.__noeListenClient !== c) return;
@@ -51,6 +51,7 @@ export async function ensureListener(): Promise<void> {
   try {
     await c.connect();
     await c.query("LISTEN noe_events");
+    emitEvent({ table: "resync", op: "RESYNC", row: {} }); // NOTIFYs sent while not listening are lost
   } catch (err: any) {
     drop(err?.message ?? "connect failed");
     throw err;

@@ -1,0 +1,124 @@
+@import "tailwindcss";
+@import "uniwind";
+@import "heroui-native/styles";
+
+@source "./node_modules/heroui-native/lib";
+
+/*
+ * RAVEN design system: "ink & cream".
+ * A dark instrument (ink) above a cream card. Monochrome by default; ember is the
+ * only signal color and is reserved for flood danger. See DESIGN.md.
+ * Hex values are mirrored in src/ds/tokens.ts for SVG / maps (keep them in sync).
+ */
+
+@theme {
+  /* raw palette */
+  --color-ink: #000000;          /* OLED black: app background, the instrument */
+  --color-ink-raised: #141414;   /* toggle track, sheets on ink */
+  --color-pill: #303030;         /* dark pills on cream */
+  --color-pill-active: #484848;  /* selected segment inside a pill */
+  --color-pill-faint: #5a5a5a;   /* faint marks on a pill (steps still to come) */
+  --color-tick: #3d3d3d;         /* idle gauge ticks */
+  --color-ash: #949089;          /* muted text on ink (4.9:1) */
+  --color-paper: #f2eee9;        /* text on ink, knob */
+  --color-cream: #e8e5dd;        /* the card */
+  --color-cream-deep: #dedad1;   /* pressed / inset on cream */
+  --color-cream-line: #d2cdc3;   /* hairlines on cream */
+  --color-taupe: #66615a;        /* muted text on cream (4.9:1) */
+  --color-coal: #262626;         /* text on cream */
+  --color-mauve: #706161;        /* blob rim */
+  --color-cocoa: #322f2e;        /* blob core */
+  --color-ember: #e07a5f;        /* flood danger, the only loud color */
+  --color-water: #8fb3c4;        /* water depth figures */
+  --color-sage: #a3b79c;         /* done / safe */
+
+  /* Jost: geometric, Futura-like. HeroUI needs all four weight families. */
+  --font-normal: "Jost_400Regular";
+  --font-medium: "Jost_500Medium";
+  --font-semibold: "Jost_600SemiBold";
+  --font-bold: "Jost_700Bold";
+  --font-light: "Jost_300Light";       /* subtitles, stat values */
+  --font-hair: "Jost_200ExtraLight";   /* gauge display numbers */
+
+  --radius: 1rem;
+}
+
+/* RAVEN is dark-only; both variants carry the same values so a system switch changes nothing. */
+@layer theme {
+  :root {
+    @variant light {
+      --background: #000000;
+      --foreground: #f2eee9;
+      --surface: #e8e5dd;
+      --surface-foreground: #262626;
+      --surface-secondary: #dedad1;
+      --surface-secondary-foreground: #262626;
+      --surface-tertiary: #d2cdc3;
+      --surface-tertiary-foreground: #262626;
+      --overlay: #e8e5dd;
+      --overlay-foreground: #262626;
+      --backdrop: rgba(0, 0, 0, 0.55);
+      --muted: #7a746c;
+      --default: #303030;
+      --default-foreground: #f2eee9;
+      --accent: #2a2a2a;
+      --accent-foreground: #f2eee9;
+      --field-background: #dedad1;
+      --field-foreground: #262626;
+      --field-placeholder: #7a746c;
+      --field-border: transparent;
+      --success: #a3b79c;
+      --success-foreground: #1f1f1f;
+      --warning: #d9a35b;
+      --warning-foreground: #1f1f1f;
+      --danger: #e07a5f;
+      --danger-foreground: #1f1f1f;
+      --segment: #484848;
+      --segment-foreground: #f2eee9;
+      --border: transparent;
+      --separator: #d2cdc3;
+      --focus: #f2eee9;
+      --link: #262626;
+      --surface-shadow: 0 0 0 0 transparent inset;
+      --overlay-shadow: 0 0 0 0 transparent inset;
+      --field-shadow: 0 0 0 0 transparent inset;
+    }
+    @variant dark {
+      --background: #000000;
+      --foreground: #f2eee9;
+      --surface: #e8e5dd;
+      --surface-foreground: #262626;
+      --surface-secondary: #dedad1;
+      --surface-secondary-foreground: #262626;
+      --surface-tertiary: #d2cdc3;
+      --surface-tertiary-foreground: #262626;
+      --overlay: #e8e5dd;
+      --overlay-foreground: #262626;
+      --backdrop: rgba(0, 0, 0, 0.55);
+      --muted: #7a746c;
+      --default: #303030;
+      --default-foreground: #f2eee9;
+      --accent: #2a2a2a;
+      --accent-foreground: #f2eee9;
+      --field-background: #dedad1;
+      --field-foreground: #262626;
+      --field-placeholder: #7a746c;
+      --field-border: transparent;
+      --success: #a3b79c;
+      --success-foreground: #1f1f1f;
+      --warning: #d9a35b;
+      --warning-foreground: #1f1f1f;
+      --danger: #e07a5f;
+      --danger-foreground: #1f1f1f;
+      --segment: #484848;
+      --segment-foreground: #f2eee9;
+      --border: transparent;
+      --separator: #d2cdc3;
+      --focus: #f2eee9;
+      --link: #262626;
+      --surface-shadow: 0 0 0 0 transparent inset;
+      --overlay-shadow: 0 0 0 0 transparent inset;
+      --field-shadow: 0 0 0 0 transparent inset;
+    }
+  }
+}
