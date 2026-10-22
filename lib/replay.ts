@@ -23,6 +23,7 @@ const CALL_WINDOW_MS = 90 * MIN;
 
 interface Engine {
   simMs: number; speed: number; running: boolean; timer: ReturnType<typeof setInterval> | null;
+  slowedFrom: number | null; // speed before the live DOVE call slowed the replay; restored when a rescuer is sent to her
   startMs: number; endMs: number; mode: DataMode; modeChecked: boolean;
   primed: boolean; lastCopiedMs: number; tickBusy: boolean;
   hNow: Record<string, number>;
@@ -44,10 +45,10 @@ function envMs(name: string, fallback: string): number {
 
 function eng(): Engine {
   if (!g.__noeEngine) {
-    const startMs = envMs("REPLAY_START", "2026-10-19T18:00:00Z");
+    const startMs = envMs("REPLAY_START", "2026-10-20T01:00:00Z"); // 03:00 Paris: alert 03:15, Garcia call 03:30
     const endMs = envMs("REPLAY_END", "2026-10-20T12:00:00Z");
     g.__noeEngine = {
-      simMs: startMs, speed: clampSpeed(Number(process.env.REPLAY_SPEED) || 60), running: false, timer: null,
+      simMs: startMs, speed: clampSpeed(Number(process.env.REPLAY_SPEED) || 60), running: false, timer: null, slowedFrom: null,
       startMs, endMs, mode: "REPLAY", modeChecked: false,
       primed: false, lastCopiedMs: startMs, tickBusy: false,
       hNow: {}, flood: null, projection: [], lastForecasts: [], bestForecastId: null,
@@ -112,6 +113,16 @@ export async function logAgent(agent: AgentName, message: string, data?: unknown
   }
 }
 
+/** A rescuer was sent to the live DOVE resident: undo the call slowdown so the water arrives within the demo. */
+export async function resumeAfterDispatch(targetType: string, targetId: string): Promise<void> {
+  const e = eng();
+  if (targetType !== "resident" || targetId !== REAL_PHONE_RESIDENT || e.slowedFrom == null) return;
+  e.speed = e.slowedFrom;
+  e.slowedFrom = null;
+  emitClock();
+  await logAgent("replay", `Rescuer sent to the live DOVE call · replay back to ×${e.speed}`, { speed: e.speed });
+}
+
 /** Trigger the dispatcher + copilot immediately (still never concurrently). */
 export function notifyNeed(_kind: "needs_help" | "rescuer_available"): void {
   requestCopilot(true);
@@ -122,6 +133,7 @@ export async function control(action: "start" | "pause" | "reset" | "speed", spe
   if (action === "speed") {
     if (speed == null || !Number.isFinite(speed)) throw new Error("speed required");
     e.speed = clampSpeed(speed);
+    e.slowedFrom = null; // the commander took over the speed
     emitClock();
     await logAgent("replay", `Speed ×${e.speed}`, { speed: e.speed });
     return getClock();
@@ -298,6 +310,7 @@ async function reset(e: Engine) {
   e.cache = {};
   e.modeChecked = false;
   e.speed = clampSpeed(Number(process.env.REPLAY_SPEED) || 60); // rehearsals (smoke: ×600) must not leak into the demo
+  e.slowedFrom = null;
   emitEvent({ table: "reset", op: "RESET", row: {} } as NoeEvent);
   emitClock();
 }
@@ -512,6 +525,7 @@ async function runPlaybook(
     scheduleResidentOutcome(e.simQueue, res.id, call.id, simMs);
     if (res.id === REAL_PHONE_RESIDENT && e.speed > 10) {
       // keep the spoken ETA true and leave time for RAVEN + ARK before the water arrives
+      e.slowedFrom = e.speed;
       e.speed = clampSpeed(10);
       emitClock();
       await logAgent("replay", "Live DOVE call · replay slowed to ×10", { speed: e.speed });

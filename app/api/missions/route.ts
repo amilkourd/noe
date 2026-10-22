@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Mission, Rescuer } from "@/lib/types";
 import { one } from "@/lib/db";
-import { getRuntime, logAgent, notifyNeed, safeTerrain } from "@/lib/replay";
+import { getRuntime, logAgent, notifyNeed, resumeAfterDispatch, safeTerrain } from "@/lib/replay";
 import { missionNumber, shortName } from "@/lib/sim";
 import { guard, hNowFromDb, jsonError, loadTarget, parseBody, waterAt } from "@/lib/state";
 
@@ -70,6 +70,7 @@ export async function POST(req: Request) {
       event: "mission_sent", missionId: m.id, rescuerId: rescuer.id, targetType: target.type, targetId: target.id, insightId: body.insightId ?? null,
     });
     notifyNeed("rescuer_available"); // refresh suggestions: this rescuer and target are now taken
+    await resumeAfterDispatch(target.type, target.id);
     return Response.json(m, { status: 201 });
   });
 }

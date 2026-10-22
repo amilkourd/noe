@@ -23,7 +23,7 @@ Honesty labels used everywhere:
 | `AIVEN_CA_CERT` | Aiven CA PEM. Real newlines, or a single line with literal `\n`. Not needed on Aiven Runtime, which injects `PROJECT_CA_CERT` (read by `lib/db.ts`). |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Copilot LLM (default `claude-sonnet-5-5`). If either is missing or fails, it falls back to template insights. |
 | `ELEVENLABS_AGENT_ID` | DOVE voice agent, read at request time, so a restart is enough. `NEXT_PUBLIC_ELEVENLABS_AGENT_ID` also works but is frozen at build. See `docs/elevenlabs-agent.md`. |
-| `REPLAY_START`, `REPLAY_END`, `REPLAY_SPEED` | Default `2026-10-19T18:00:00Z`, `2026-10-20T12:00:00Z`, `60` (1 real s = 60 sim s). `reset` restores this speed. |
+| `REPLAY_START`, `REPLAY_END`, `REPLAY_SPEED` | Default `2026-10-20T01:00:00Z` (03:00 Paris, sized for the 3-minute demo; the gauge history before it is still loaded), `2026-10-20T12:00:00Z`, `60` (1 real s = 60 sim s). `reset` restores this speed. |
 
 ### 2. One-time setup
 
@@ -68,7 +68,7 @@ curl -X POST $URL/api/replay -H 'content-type: application/json' -d '{"action":"
 curl -X POST $URL/api/replay -H 'content-type: application/json' -d '{"action":"reset"}'
 ```
 
-When NOÉ places the live DOVE call to `res-garcia` (around 03:30 Paris sim time), the replay slows itself to ×10. That leaves about 7 real minutes for the call, the RAVEN availability toggle and the ARK order before the water arrives (around 04:45). Speed it back up afterwards.
+The 3-minute demo at ×60 from 03:00 Paris: perimeter alert on RAVEN at 03:15 (0:15), live DOVE call to `res-garcia` at 03:30 (0:30). The call slows the replay to ×10, so the spoken ETA stays true. When ARK sends a rescuer to `res-garcia`, the replay goes back to the speed it had before the call. The river crosses 2 m at 04:10 and the water reaches her door around 04:45, about a minute after the order. Changing the speed by hand during the call cancels the automatic return.
 
 ### Other endpoints
 
