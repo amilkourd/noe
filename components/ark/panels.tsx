@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button, ScrollShadow, Tabs, ToggleButton, ToggleButtonGroup, Tooltip } from "@heroui/react";
 import type { AgentLog, Exposure, Forecast, Insight, MissionStatus, NoeState, Observation, Rescuer, Resident, Station, StatusReport, DoveCall, Mission, Site } from "@/lib/types";
 import { hhmm, day, minutesUntil, relMinutes, shortName, missionNumber, splitNum, mobilityLabel, stationShort, LEVEL_LABEL, LEVEL_RANK, type ResidentLevel } from "./format";
-import { sendMission, setInsight, replay, type ActionResult, type Conn } from "./useNoe";
+import { sendMission, sendRescuer, setInsight, replay, type ActionResult, type Conn } from "./useNoe";
 import {
   ArkMark, ArrowUpRightIcon, CloseIcon, CubeIcon, LocateIcon, PauseIcon, PhoneIcon, PlayIcon, ResetIcon, SparkIcon, TriangleGlyph, WavesIcon,
 } from "./icons";
@@ -696,14 +696,27 @@ export function SelectionCard({ sel, v, onClose, onSelect }: { sel: NonNullable<
       ? <InfoPill label={`Mission ${missionNumber(mission.id)}`} value={`${STEP_LABEL[mission.status]} · ${shortName(v.rescuerBy.get(mission.rescuer_id)?.name ?? mission.rescuer_id)}`} onPress={() => onSelect({ type: "rescuer", id: mission.rescuer_id })} />
       : sugg
         ? <SendPill key={sugg.id} i={sugg} v={v} />
-        : <InfoPill label="Water" value={waterText(ex, s)} hint={ex ? "approx. model" : undefined} />;
+        : (
+          <div className="flex flex-col gap-2">
+            <InfoPill label="Water" value={waterText(ex, s)} hint={ex ? "approx. model" : undefined} />
+            <ManualSendPill key={r.id} target={{ type: "resident", id: r.id, lat: r.lat, lon: r.lon }} v={v} />
+          </div>
+        );
   } else if (sel.type === "site") {
     const site = v.siteBy.get(sel.id);
     if (!site) return null;
     title = site.name;
     tag = `${site.kind.replace("_", " ")} · OSM`;
     rows = [["Capacity", site.capacity != null ? String(site.capacity) : "unknown"]];
-    pill = <InfoPill label="Water" value={waterText(v.exposureBy.get(`site:${site.id}`), s)} hint={v.exposureBy.has(`site:${site.id}`) ? "approx. model" : undefined} />;
+    const siteMission = v.activeMissions.find((m) => m.target_type === "site" && m.target_id === site.id);
+    pill = (
+      <div className="flex flex-col gap-2">
+        <InfoPill label="Water" value={waterText(v.exposureBy.get(`site:${site.id}`), s)} hint={v.exposureBy.has(`site:${site.id}`) ? "approx. model" : undefined} />
+        {siteMission
+          ? <InfoPill label={`Mission ${missionNumber(siteMission.id)}`} value={`${STEP_LABEL[siteMission.status]} · ${shortName(v.rescuerBy.get(siteMission.rescuer_id)?.name ?? siteMission.rescuer_id)}`} onPress={() => onSelect({ type: "rescuer", id: siteMission.rescuer_id })} />
+          : <ManualSendPill key={site.id} target={{ type: "site", id: site.id, lat: site.lat, lon: site.lon }} v={v} />}
+      </div>
+    );
   } else if (sel.type === "rescuer") {
     const r = v.rescuerBy.get(sel.id);
     if (!r) return null;
@@ -766,6 +779,51 @@ function InfoPill({ label, value, hint, onPress }: { label: string; value: strin
     <button onClick={onPress} className="ark-white-pill flex items-center gap-3 text-left">{body}<ArrowUpRightIcon size={14} className="flex-none" /></button>
   ) : (
     <div className="ark-white-pill flex items-center gap-3">{body}</div>
+  );
+}
+
+/** Free rescuers nearest first (straight line). */
+function freeRescuers(v: View, at: { lat: number; lon: number }, t3Only: boolean): Rescuer[] {
+  const busy = new Set(v.activeMissions.map((m) => m.rescuer_id));
+  const d = (r: Rescuer) => {
+    const lat = r.lat ?? r.home_lat ?? 0, lon = r.lon ?? r.home_lon ?? 0;
+    return (lat - at.lat) ** 2 + ((lon - at.lon) * Math.cos((at.lat * Math.PI) / 180)) ** 2;
+  };
+  return v.state.rescuers
+    .filter((r) => r.available && !busy.has(r.id) && (r.lat ?? r.home_lat) != null && (!t3Only || r.tier === "T3"))
+    .sort((a, b) => d(a) - d(b));
+}
+
+/** Manual order without a Copilot suggestion: nearest free rescuer; if water makes it T3-only, nearest free T3. */
+function ManualSendPill({ target, v }: { target: { type: "site" | "resident"; id: string; lat: number; lon: number }; v: View }) {
+  const [pending, setPending] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const nearest = freeRescuers(v, target, false)[0];
+  const send = async () => {
+    if (!nearest) return;
+    setPending(true);
+    setErr(null);
+    let res = await sendRescuer(nearest.id, target.type, target.id, "T1");
+    if (!res.ok && res.code === "T3_REQUIRED") {
+      const t3 = freeRescuers(v, target, true)[0];
+      res = t3 ? await sendRescuer(t3.id, target.type, target.id, "T3") : { ok: false, message: "Water at the target: no free T3 rescuer" };
+    }
+    setPending(false);
+    if (!res.ok) setErr(res.message ?? "Failed");
+  };
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="ark-white-pill flex items-center gap-3">
+        <span className="min-w-0 flex-1">
+          <span className="block text-[11px] text-black/55">Send a rescuer</span>
+          <span className="block truncate text-[13px] font-medium">{nearest ? `${shortName(nearest.name)} · ${nearest.tier} · nearest free` : "No rescuer free"}</span>
+        </span>
+        <Button size="sm" className="!h-8 rounded-full bg-noe-bg px-4 text-white" isPending={pending} isDisabled={!nearest} onPress={send}>
+          Send
+        </Button>
+      </div>
+      {err && <p className="ark-glass !rounded-2xl px-3 py-2 text-[11px] text-noe-danger">{err}</p>}
+    </div>
   );
 }
 

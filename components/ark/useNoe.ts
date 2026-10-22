@@ -191,14 +191,14 @@ export function useNoe() {
 
 // ---------------------------------------------------------------- operator actions
 
-export interface ActionResult { ok: boolean; message?: string }
+export interface ActionResult { ok: boolean; message?: string; code?: string }
 
 async function call(url: string, method: string, body: unknown): Promise<ActionResult> {
   try {
     const r = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (r.ok) return { ok: true };
-    const j = (await r.json().catch(() => null)) as { error?: string } | null;
-    return { ok: false, message: j?.error ?? `Request failed (${r.status})` };
+    const j = (await r.json().catch(() => null)) as { error?: string; code?: string } | null;
+    return { ok: false, message: j?.error ?? `Request failed (${r.status})`, code: j?.code };
   } catch (err) {
     return { ok: false, message: String((err as Error)?.message ?? err) };
   }
@@ -210,6 +210,11 @@ export function sendMission(i: Insight): Promise<ActionResult> {
     rescuerId: p.rescuerId, targetType: p.targetType, targetId: p.targetId,
     routeNote: p.routeNote ?? null, requiredTier: p.requiredTier ?? "T1", insightId: i.id,
   });
+}
+
+/** Manual order from ARK (no Copilot suggestion): the server still enforces the T3 water rule. */
+export function sendRescuer(rescuerId: string, targetType: "site" | "resident", targetId: string, requiredTier: "T1" | "T3"): Promise<ActionResult> {
+  return call("/api/missions", "POST", { rescuerId, targetType, targetId, requiredTier, routeNote: null, insightId: null });
 }
 
 export function setInsight(id: number, status: "accepted" | "dismissed"): Promise<ActionResult> {
