@@ -8,6 +8,8 @@ import { doveLang, firstMessage, humanEta, INSTRUCTION, type DoveInfo, type Dove
 const TOWN = "Sommières";
 // DOVE speaks English to everyone for now. null = each resident's own language (copy exists for fr/es/ar/pt/en).
 const FORCE_LANG: DoveLang | null = "en";
+// Public id (every DOVE browser receives it anyway), see docs/elevenlabs-agent.md. ELEVENLABS_AGENT_ID overrides it.
+const DEFAULT_AGENT_ID = "agent_5801m5hqx580e8vsr5g7bkkzd33n";
 
 interface ResidentRow { id: string; name: string; language: string | null; age: number | null; persona: boolean | null }
 interface ExposureRow { eta: Date | string | null; depth_m: number | null; sim_time: Date | string }
@@ -67,7 +69,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ residen
       latestCall: latestCall
         ? { ...latestCall, id: Number(latestCall.id), created_at: new Date(latestCall.created_at).toISOString() }
         : null,
-      agentId: process.env.ELEVENLABS_AGENT_ID || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || null,
+      agentId: process.env.ELEVENLABS_AGENT_ID || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || DEFAULT_AGENT_ID,
     };
     return NextResponse.json(body, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {

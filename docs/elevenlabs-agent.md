@@ -126,7 +126,7 @@ Overrides in the API shape: `platform_settings.overrides.conversation_config_ove
 
 ## 6. Env var
 
-Set the agent id where the server runs (Aiven Runtime service env vars, or `.env.local` locally), then restart (no rebuild needed: `GET /api/dove/[residentId]` reads it on the server at request time and returns it as `agentId`):
+The created agent's id is the default in `app/api/dove/[residentId]/route.ts` (`DEFAULT_AGENT_ID`; it is public, every DOVE browser receives it), so nothing has to be set on Aiven. To use another agent, set its id where the server runs (Aiven Runtime service env vars, or `.env.local` locally), then restart (no rebuild needed: `GET /api/dove/[residentId]` reads it on the server at request time and returns it as `agentId`):
 
 ```
 ELEVENLABS_AGENT_ID=agent_xxxxxxxxxxxxxxxxxxxxxxxx
