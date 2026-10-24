@@ -9,7 +9,7 @@ const urbanist = Urbanist({
 });
 
 export const metadata: Metadata = {
-  title: "Noé",
+  title: "Noe",
   description: "Agentic brain for flood response",
 };
 
